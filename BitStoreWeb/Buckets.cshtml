@@ -1,0 +1,44 @@
+﻿@{
+    Layout = "~/_SiteLayout.cshtml";
+    Page.Title = "Buckets";
+}
+
+<div class="tab-pane active" id="buckets">
+	<div class="row-fluid buckets">
+			<h2>Your buckets<button class="btn btn-small btn-success" type="button" href="#create-new-bucket-modal" data-toggle="modal">Create new</button><button class="btn btn-small btn-success" type="button">Buy more buckets...</button></h2>
+			<h4>You have 14 buckets (3 used and 11 empty)</h4><br />
+			<h5>Click on bucket to view details</h5>
+		<div class="bucketrow">
+			<span class="img-bucket"></span>
+			<a href="~/BucketDetails" type="button"><span class="label label-info"><h3>partymaskinen</h3></span></a>
+			<span class="muted">Cookies for partymaskinen.se</span>
+		</div>
+		<div class="bucketrow">
+			<span class="img-bucket"></span>
+			<a href="~/BucketDetails" type="button"><span class="label label-info"><h3>bitstore</h3></span></a>
+			<span class="muted">BitStore visitor counter</span>
+		</div>	
+		<div class="bucketrow">
+			<span class="img-bucket"></span>
+			<a href="~/BucketDetails" type="button"><span class="label label-info"><h3>geggin's lair</h3></span></a>
+			<span class="muted">Highscore for the game Geggin's Lair</span>
+		</div>
+		<!-- create new bucket modal -->
+		<div class="modal fade" id="create-new-bucket-modal">
+			<div class="modal-header">
+				<a class="close" data-dismiss="modal">&times;</a>
+				<h3>Create a bucket</h3>
+				<h5>You have 14 buckets (3 used and 11 empty)</h5><br />
+			</div>
+			<div class="modal-body">
+				<input type="text" placeholder='Name of bucket'>
+				<input type="text" placeholder='Descriptioon'>
+			</div>
+				<div class="modal-footer">
+				<a href="#" class="btn" data-dismiss="modal">Close</a>
+				<a href="#" class="btn btn-primary">Create</a>
+			</div>
+		</div>
+		<!-- ----------------------- -->
+	</div>		
+</div>

@@ -1,0 +1,68 @@
+﻿@{
+    Layout = "~/_SiteLayout.cshtml";
+    Page.Title = "BitStore - Local storage, now global!";
+}
+
+@*@if (WebSecurity.IsAuthenticated) {
+	
+} else {*@
+	<div class="jumbotron">
+		<h1>
+			<div class="flip-container">
+				<div class="flipper">
+					<div class="front">
+						<img src="~/images/logoB.png" alt="B" style="margin: -26px 345px 0 0;"/>
+					</div>
+					<div class="back">
+						<img src="~/images/logoB.png" alt="B" style="margin: -26px 345px 0 0;"/>
+					</div>		
+				</div>
+				<span style="margin-right:-40px;font-size:100px;">itStore</span>
+			</div>
+			<span><i>- Local storage... now global!</i></span>
+		</h1>		
+	</div>
+	<hr>
+	<div class="row-fluid">
+		<div class="span12">
+			<h2>About BitStore</h2>	
+			<p>Setting up databases can be boring and always involves an uncertain amount of fiddeling around.</p>
+			<p>We've created BitStore for you as a VERY easy way to put and get a string or number in our database without
+			any keys or other fuzz. With our simple API it's never been easier to prototype your javascript highscore list for example.</p>
+			<blockquote><p>- The Twitter of data storage - easy as local storage, but global!</p></blockquote>
+			<!-- Flytta till "how to use" <p>When you create your account you can easy create a bucket (a container for your Bits) and manage your precious bits as well as.. bla bla</p>-->
+		</div>
+	</div>
+<pre class="sh_javascript_dom">woot
+1.	var bucket = 'https://bitstore/beerdrinkinggame/'
+2.	$.bitStore.set(bucket, '5 liter'());
+3.	highscore = $.bitStore.get(bucket);
+
+int main(int argc, char ** argv) {
+	cout &lt;&lt; "Hello world" &lt;&lt; endl;
+	return 0;
+}
+</pre>
+	<div class="row-fluid">
+		<div class="span12">
+			<h2>A little disclaimer before we lift off</h2>	
+			<p>The BitStore micro database is mainly for prototyping, testing and fun. It's free, but the downside of simplicity is
+			insecurity. We never take responsabitlity for violation of your precious bits so you should always keep a backup if your
+			data is in crucial need of sequrity.</p>
+		</div>
+	</div>
+	@*<div class="row-fluid">
+		<div class="span12">
+			<h2>Notes from 8<</h2>
+			<p>Man skall inte kunna skapa en bucket via kod utan det gör man på webben... kommandon man bör ha tillgång är:</p>
+			<p>Obs.. ta betalt en femma / bucket är nog nice kanske... första hinken är gratis</p>
+<pre class="sh_javascript_dom">woot
+1.	get;
+2.	set;
+3.	list yar;	(view all entries with timestamp)
+4.	delete;	(deletes single entry)
+5.	reset;		(reset the whole bucket schabang)
+</pre>
+		</div>
+	</div>*@	
+@*}*@
