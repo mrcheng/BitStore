@@ -7,19 +7,9 @@ namespace BitStoreWeb
 {
 	public class HomeEndpoint
 	{
-		public HomeViewModel get(HomeInputModel input)
+		public HomeViewModel Home(HomeInputModel input)
 		{
 			return new HomeViewModel();
 		}
-	}
-
-	public class HomeViewModel
-	{
-
-	}
-
-	public class HomeInputModel
-	{
-
 	}
 }

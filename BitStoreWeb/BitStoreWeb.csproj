@@ -253,6 +253,8 @@
     <Compile Include="HomeEndpoint.cs" />
     <Compile Include="Endpoints\HowTo\HowToEndpoint.cs" />
     <Compile Include="Endpoints\HowTo\HowToViewModel.cs" />
+    <Compile Include="HomeInputModel.cs" />
+    <Compile Include="HomeViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
