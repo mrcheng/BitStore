@@ -213,6 +213,7 @@
     <Content Include="Endpoints\Bucket\Bucket.cshtml" />
     <Content Include="Endpoints\Buckets\Buckets.cshtml" />
     <Content Include="Endpoints\Examples\Examples.cshtml" />
+    <Content Include="Endpoints\Buckets\BucketsInner.cshtml" />
     <None Include="Scripts\jquery-1.7.1-vsdoc.js" />
     <Content Include="Scripts\jquery-1.7.1.js" />
     <Content Include="Scripts\jquery-1.7.1.min.js" />
@@ -239,6 +240,7 @@
     <Compile Include="App_Start\FubuMVC.cs" />
     <Compile Include="ConfigureFubuMVC.cs" />
     <Compile Include="Endpoints\Buckets\BucketsEndpoint.cs" />
+    <Compile Include="Endpoints\Buckets\BucketsInnerViewModel.cs" />
     <Compile Include="Endpoints\Buckets\BucketsInputModel.cs" />
     <Compile Include="Endpoints\Buckets\BucketsViewModel.cs" />
     <Compile Include="Endpoints\Bucket\BucketEndpoint.cs" />
@@ -265,6 +267,9 @@
     <None Include="Web.Release.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Endpoints\Api\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

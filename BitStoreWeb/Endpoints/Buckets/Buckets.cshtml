@@ -1,12 +1,15 @@
 ﻿@using BitStoreWeb.Endpoints.Bucket
 @model BitStoreWeb.Endpoints.Buckets.BucketsViewModel
 @using System
+@using FubuMVC.Core.UI
+
+@this.Partial(Model.Inner)
 
 <div class="tab-pane active" id="buckets">
 	<div class="row-fluid buckets">
-			<h2>Your buckets<button class="btn btn-small btn-success" type="button" href="#create-new-bucket-modal" data-toggle="modal">Create new</button><button class="btn btn-small btn-success" type="button">Buy more buckets...</button></h2>
-			<h4>You have 14 buckets (3 used and 11 empty)</h4><br />
-			<h5>Click on bucket to view details</h5>
+		<h2>Your buckets<button class="btn btn-small btn-success" type="button" href="#create-new-bucket-modal" data-toggle="modal">Create new</button><button class="btn btn-small btn-success" type="button">Buy more buckets...</button></h2>
+		<h4>You have 14 buckets (3 used and 11 empty)</h4><br />
+		<h5>Click on bucket to view details</h5>
 		<div class="bucketrow">
 			<span class="img-bucket"></span>
 			<a href="@(Urls.UrlFor<BucketInputModel>())" type="button"><span class="label label-info"><h3>partymaskinen</h3></span></a>
@@ -33,7 +36,7 @@
 				<input type="text" placeholder='Name of bucket'>
 				<input type="text" placeholder='Descriptioon'>
 			</div>
-				<div class="modal-footer">
+			<div class="modal-footer">
 				<a href="#" class="btn" data-dismiss="modal">Close</a>
 				<a href="#" class="btn btn-primary">Create</a>
 			</div>
@@ -41,3 +44,4 @@
 		<!-- ----------------------- -->
 	</div>		
 </div>
+
