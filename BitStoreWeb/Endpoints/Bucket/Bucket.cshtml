@@ -1,0 +1,60 @@
+﻿@model BitStoreWeb.Endpoints.Bucket.BucketViewModel
+
+<div class="row-fluid viewbucket">
+	<div class="label label-info" style="padding:0 10px 0 10px;"><h2>Partymaskinen</h2></div>
+	<h5><span class="muted">Cookies for partymaskinen.se</span></h5>
+	<h4>Found 332 records in the bucket Partymaskinen</h4><br />
+	
+	<form class="form-search">
+		<input type="text" class="input-medium search-query">
+		<button type="submit" class="btn">Go to row</button>
+		<button type="submit" class="btn btn-danger" style="float:right;">Clear all</button>
+	</form>
+	<table class="table table-striped">
+			<thead>
+			<tr>
+				<th>#</th>
+				<th>Value</th>
+				<th>Timestamp</th>
+				<th>New Value</th>
+				<th></th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>0</td>
+				<td>567</td>
+				<td>2013-12-31 23:59:59</td>
+				<td><input type="text" placeholder='567'></td>
+				<td><button class="btn btn-mini btn-success" type="button">Save</button></td>
+				<td><button class="btn btn-mini btn-warning" type="button">Empty</button></td>
+				<td><button class="btn btn-mini btn-danger" type="button">Delete</button></td>
+			</tr>
+			<tr>
+				<td>1</td>
+				<td>"Geggin"</td>
+				<td>2013-12-31 23:59:59</td>
+				<td><input type="text" placeholder='"Geggin"'></td>
+				<td><button class="btn btn-mini btn-success" type="button">Save</button></td>
+				<td><button class="btn btn-mini btn-warning" type="button">Empty</button></td>
+				<td><button class="btn btn-mini btn-danger" type="button">Delete</button></td>
+			</tr>
+			<tr>
+				<td>2</td>
+				<td>"http://partymaskinen.se/"</td>
+				<td>2013-12-31 23:59:59</td>
+				<td><input type="text" placeholder='"http://partymaskinen.se/"'></td>
+				<td><button class="btn btn-mini btn-success" type="button">Save</button></td>
+				<td><button class="btn btn-mini btn-warning" type="button">Empty</button></td>
+				<td><button class="btn btn-mini btn-danger" type="button">Delete</button></td>
+			</tr>
+		</tbody>
+	</table>
+	<!-- SIMPLE PAGER: http://flaviusmatis.github.io/simplePagination.js/ -->
+	<div class="pagination-holder clearfix">
+		<div id="light-pagination"></div>
+	</div>
+	<br />
+	<button class="btn" type="button">Delete bucket</button>
+</div>

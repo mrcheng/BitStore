@@ -210,6 +210,9 @@
     <Content Include="Images\orderedList9.png" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
+    <Content Include="Endpoints\Bucket\Bucket.cshtml" />
+    <Content Include="Endpoints\Buckets\Buckets.cshtml" />
+    <Content Include="Endpoints\Examples\Examples.cshtml" />
     <None Include="Scripts\jquery-1.7.1-vsdoc.js" />
     <Content Include="Scripts\jquery-1.7.1.js" />
     <Content Include="Scripts\jquery-1.7.1.min.js" />
@@ -230,11 +233,24 @@
     <Content Include="Scripts\sh_main.min.js" />
     <Content Include="Scripts\smoothscroll.js" />
     <Content Include="Web.config" />
+    <Content Include="Endpoints\HowTo\HowTo.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\FubuMVC.cs" />
     <Compile Include="ConfigureFubuMVC.cs" />
+    <Compile Include="Endpoints\Buckets\BucketsEndpoint.cs" />
+    <Compile Include="Endpoints\Buckets\BucketsInputModel.cs" />
+    <Compile Include="Endpoints\Buckets\BucketsViewModel.cs" />
+    <Compile Include="Endpoints\Bucket\BucketEndpoint.cs" />
+    <Compile Include="Endpoints\Bucket\BucketInputModel.cs" />
+    <Compile Include="Endpoints\Bucket\BucketViewModel.cs" />
+    <Compile Include="Endpoints\Examples\ExamplesEndpoint.cs" />
+    <Compile Include="Endpoints\Examples\ExamplesInputModel.cs" />
+    <Compile Include="Endpoints\Examples\ExamplesViewModel.cs" />
+    <Compile Include="Endpoints\HowTo\HowToInputModel.cs" />
     <Compile Include="HomeEndpoint.cs" />
+    <Compile Include="Endpoints\HowTo\HowToEndpoint.cs" />
+    <Compile Include="Endpoints\HowTo\HowToViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

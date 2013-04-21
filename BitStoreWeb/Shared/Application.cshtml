@@ -1,4 +1,9 @@
-﻿
+﻿@using BitStoreWeb.Endpoints.Buckets
+@using BitStoreWeb.Endpoints.Examples
+@using BitStoreWeb.Endpoints.HowTo
+@using FubuMVC.Core.Urls
+@using System
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -47,30 +52,14 @@
 					<div class="container">
 						<ul class="nav">
 							<li class="active"><a href="/" class="menu-start">Home</a></li>
-							@*@if (WebSecurity.IsAuthenticated){
-								<li><a href="~/Buckets" target="_self">Buckets</a></li>
-							}*@
-							<li><a href="/HowTo" target="_self">How to use</a></li>
-							@*<li><a href="/Examples" target="_self">Examples</a></li>*@
+							<li><a href="@(Urls.UrlFor<BucketsInputModel>())" target="_self">Buckets</a></li>
+							<li><a href="@(Urls.UrlFor<HowToInputModel>())" target="_self">How to use</a></li>
+							<li><a href="@(Urls.UrlFor<ExamplesInputModel>())" target="_self">Examples</a></li>
 							<li><a href="https://github.com/mrcheng/BitStore/" target="_self">GitHub</a></li>
-							@*@if (!WebSecurity.IsAuthenticated) {
-								<li><a href="/Account/Register" target="_self">Create account</a></li>
-								<li><a href="/Account/Login" target="_self">Log in</a></li>
-                            } else {
-                            	*@<li><a href="/AccountSettings" target="_self">Account</a></li>
-                            @*}*@
 						</ul>
 					</div>
 				</div>
 			</div><!-- /.navbar -->
-			@*@if (WebSecurity.IsAuthenticated){
-
-				<ul class="nav nav-tabs">
-					<li class="active"><a href="#buckets" data-toggle="tab">Buckets</a></li>
-					<li><a href="#account" data-toggle="tab">Account</a></li>
-				</ul>
-   	
-			}*@
 			@RenderBody()
 			<hr>
 			<footer>
