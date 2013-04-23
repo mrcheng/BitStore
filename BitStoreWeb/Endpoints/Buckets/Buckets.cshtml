@@ -2,29 +2,35 @@
 @model BitStoreWeb.Endpoints.Buckets.BucketsViewModel
 @using System
 @using FubuMVC.Core.UI
-
 @this.Partial(Model.Inner)
 
 <div class="tab-pane active" id="buckets">
 	<div class="row-fluid buckets">
-		<h2>Your buckets<button class="btn btn-small btn-success" type="button" href="#create-new-bucket-modal" data-toggle="modal">Create new</button><button class="btn btn-small btn-success" type="button">Buy more buckets...</button></h2>
+		
+		
+		@*if NO email is entered*@
+		<h2>Available buckets<button class="btn btn-small btn-success" type="button" href="#login-modal" data-toggle="modal">Enter email to create your personal bucket</button>@*<button class="btn btn-small btn-success" type="button">Buy more buckets...</button>*@</h2>
+		<div class="bucketrow">
+			<span class="img-bucket"></span>
+			<a href="@(Urls.UrlFor<BucketInputModel>())" type="button"><span class="label label-info"><h3>testbucket</h3></span></a>
+			<span class="muted">Testbucket for BitStore, feel free to go nuts!</span>
+		</div>
+
+		<!--
+		@*if email is entered*@
+		<h2>Your buckets<button class="btn btn-small btn-success" type="button" href="#create-new-bucket-modal" data-toggle="modal">Create new</button>@*<button class="btn btn-small btn-success" type="button">Buy more buckets...</button>*@</h2>
 		<h4>You have 14 buckets (3 used and 11 empty)</h4><br />
 		<h5>Click on bucket to view details</h5>
+
+		@*loopeli loop*@
 		<div class="bucketrow">
 			<span class="img-bucket"></span>
 			<a href="@(Urls.UrlFor<BucketInputModel>())" type="button"><span class="label label-info"><h3>partymaskinen</h3></span></a>
 			<span class="muted">Cookies for partymaskinen.se</span>
 		</div>
-		<div class="bucketrow">
-			<span class="img-bucket"></span>
-			<a href="@(Urls.UrlFor<BucketInputModel>())" type="button"><span class="label label-info"><h3>bitstore</h3></span></a>
-			<span class="muted">BitStore visitor counter</span>
-		</div>	
-		<div class="bucketrow">
-			<span class="img-bucket"></span>
-			<a href="@(Urls.UrlFor<BucketInputModel>())" type="button"><span class="label label-info"><h3>geggin's lair</h3></span></a>
-			<span class="muted">Highscore for the game Geggin's Lair</span>
-		</div>
+		-->
+
+
 		<!-- create new bucket modal -->
 		<div class="modal fade" id="create-new-bucket-modal">
 			<div class="modal-header">
@@ -39,6 +45,23 @@
 			<div class="modal-footer">
 				<a href="#" class="btn" data-dismiss="modal">Close</a>
 				<a href="#" class="btn btn-primary">Create</a>
+			</div>
+		</div>
+		<!-- ----------------------- -->
+		<!-- login modal -->
+		<div class="modal fade" id="login-modal">
+			<div class="modal-header">
+				<a class="close" data-dismiss="modal">&times;</a>
+				<h3>Enter your email adress</h3>
+				<h5>This is neccesary to be able to create your own buckets and filter out buckets you've created</h5><br />
+				<p>Rest assured we will not use your email to molest your relatives nor yourself or any other shady activities</p>
+			</div>
+			<div class="modal-body">
+				<input type="text" placeholder='Your email'>
+			</div>
+			<div class="modal-footer">
+				<a href="#" class="btn" data-dismiss="modal">Close</a>
+				<a href="#" class="btn btn-primary">Enter</a>
 			</div>
 		</div>
 		<!-- ----------------------- -->
