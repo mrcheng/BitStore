@@ -4,9 +4,10 @@
 @using FubuMVC.Core.UI
 @this.Partial(Model.Inner)
 
+<!-- TODO: Why the fuck is the navbar fucked when in this tab -->
+
 <div class="tab-pane active" id="buckets">
 	<div class="row-fluid buckets">
-		
 		
 		@*if NO email is entered*@
 		<h2>Available buckets<button class="btn btn-small btn-success" type="button" href="#login-modal" data-toggle="modal">Enter email to create your personal bucket</button>@*<button class="btn btn-small btn-success" type="button">Buy more buckets...</button>*@</h2>
@@ -53,7 +54,7 @@
 			<div class="modal-header">
 				<a class="close" data-dismiss="modal">&times;</a>
 				<h3>Enter your email adress</h3>
-				<h5>This is neccesary to be able to create your own buckets and filter out buckets you've created</h5><br />
+				<h5>This is neccesary to be able to create your own buckets and filter out buckets you've created</h5>
 				<p>Rest assured we will not use your email to molest your relatives nor yourself or any other shady activities</p>
 			</div>
 			<div class="modal-body">
