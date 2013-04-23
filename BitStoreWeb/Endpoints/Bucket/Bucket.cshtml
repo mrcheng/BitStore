@@ -1,14 +1,14 @@
 ﻿@model BitStoreWeb.Endpoints.Bucket.BucketViewModel
 
 <div class="row-fluid viewbucket">
-	<div class="label label-info" style="padding:0 10px 0 10px;"><h2>Partymaskinen</h2></div>
-	<h5><span class="muted">Cookies for partymaskinen.se</span></h5>
-	<h4>Found 332 records in the bucket Partymaskinen</h4><br />
+	<div class="label label-info" style="padding:0 10px 0 10px;"><h2>Testbucket</h2></div>
+	<h5><span class="muted">Testbucket for BitStore, feel free to go nuts!</span></h5>
+	<h4>Found 332 records in the bucket Testbucket</h4><br />
 	
 	<form class="form-search">
 		<input type="text" class="input-medium search-query">
 		<button type="submit" class="btn">Go to row</button>
-		<button type="submit" class="btn btn-danger" style="float:right;">Clear all</button>
+		<button type="submit" class="btn btn-danger" href="#clear-all-modal" data-toggle="modal" style="float:right;">Clear all</button>
 	</form>
 	<table class="table table-striped">
 			<thead>
@@ -56,5 +56,41 @@
 		<div id="light-pagination"></div>
 	</div>
 	<br />
-	<button class="btn" type="button">Delete bucket</button>
+	<button class="btn" type="button" href="#delete-bucket-modal" data-toggle="modal">Delete bucket</button>
+
+	<!-- clear all modal -->
+	<div class="modal fade" id="clear-all-modal">
+		<div class="modal-header">
+			<a class="close" data-dismiss="modal">&times;</a>
+			<h3>Clear all</h3>
+			<h5>Do you really want to clear all records for bucket Testbucket?</h5><br />
+		</div>
+		<div class="modal-body">
+			@*<input type="text" placeholder='Name of bucket'>
+			<input type="text" placeholder='Descriptioon'>*@
+		</div>
+		<div class="modal-footer">
+			<a href="#" class="btn" data-dismiss="modal">No</a>
+			<a href="#" class="btn btn-primary">Yes</a>
+		</div>
+	</div>
+	<!-- ----------------------- -->
+	<!-- clear all modal -->
+	<div class="modal fade" id="delete-bucket-modal">
+		<div class="modal-header">
+			<a class="close" data-dismiss="modal">&times;</a>
+			<h3>Delete bucket</h3>
+			<h5>Do you really want to delete the bucket Testbucket?</h5><br />
+		</div>
+		<div class="modal-body">
+			@*<input type="text" placeholder='Name of bucket'>
+			<input type="text" placeholder='Descriptioon'>*@
+		</div>
+		<div class="modal-footer">
+			<a href="#" class="btn" data-dismiss="modal">No</a>
+			<a href="#" class="btn btn-primary">Yes</a>
+		</div>
+	</div>
+	<!-- ----------------------- -->
+
 </div>

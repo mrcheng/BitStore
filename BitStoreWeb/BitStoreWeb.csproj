@@ -212,7 +212,7 @@
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Endpoints\Bucket\Bucket.cshtml" />
     <Content Include="Endpoints\Buckets\Buckets.cshtml" />
-    <Content Include="Endpoints\Examples\Examples.cshtml" />
+    <Content Include="Endpoints\Examples\API.cshtml" />
     <Content Include="Endpoints\Buckets\BucketsInner.cshtml" />
     <None Include="Scripts\jquery-1.7.1-vsdoc.js" />
     <Content Include="Scripts\jquery-1.7.1.js" />
@@ -246,9 +246,9 @@
     <Compile Include="Endpoints\Bucket\BucketEndpoint.cs" />
     <Compile Include="Endpoints\Bucket\BucketInputModel.cs" />
     <Compile Include="Endpoints\Bucket\BucketViewModel.cs" />
-    <Compile Include="Endpoints\Examples\ExamplesEndpoint.cs" />
-    <Compile Include="Endpoints\Examples\ExamplesInputModel.cs" />
-    <Compile Include="Endpoints\Examples\ExamplesViewModel.cs" />
+    <Compile Include="Endpoints\Examples\APIEndpoint.cs" />
+    <Compile Include="Endpoints\Examples\APIInputModel.cs" />
+    <Compile Include="Endpoints\Examples\APIViewModel.cs" />
     <Compile Include="Endpoints\HowTo\HowToInputModel.cs" />
     <Compile Include="HomeEndpoint.cs" />
     <Compile Include="Endpoints\HowTo\HowToEndpoint.cs" />
