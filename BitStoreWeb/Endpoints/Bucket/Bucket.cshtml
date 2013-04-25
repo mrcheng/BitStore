@@ -28,26 +28,8 @@
 				<td>2013-12-31 23:59:59</td>
 				<td><input type="text" placeholder='567'></td>
 				<td><button class="btn btn-mini btn-success" type="button">Save</button></td>
-				<td><button class="btn btn-mini btn-warning" type="button">Empty</button></td>
-				<td><button class="btn btn-mini btn-danger" type="button">Delete</button></td>
-			</tr>
-			<tr>
-				<td>1</td>
-				<td>"Geggin"</td>
-				<td>2013-12-31 23:59:59</td>
-				<td><input type="text" placeholder='"Geggin"'></td>
-				<td><button class="btn btn-mini btn-success" type="button">Save</button></td>
-				<td><button class="btn btn-mini btn-warning" type="button">Empty</button></td>
-				<td><button class="btn btn-mini btn-danger" type="button">Delete</button></td>
-			</tr>
-			<tr>
-				<td>2</td>
-				<td>"http://partymaskinen.se/"</td>
-				<td>2013-12-31 23:59:59</td>
-				<td><input type="text" placeholder='"http://partymaskinen.se/"'></td>
-				<td><button class="btn btn-mini btn-success" type="button">Save</button></td>
-				<td><button class="btn btn-mini btn-warning" type="button">Empty</button></td>
-				<td><button class="btn btn-mini btn-danger" type="button">Delete</button></td>
+				<td><button class="btn btn-mini btn-warning" type="button" href="#clear-row-modal" data-toggle="modal">Clear</button></td>
+				<td><button class="btn btn-mini btn-danger" type="button" href="#delete-row-modal" data-toggle="modal">Delete</button></td>
 			</tr>
 		</tbody>
 	</table>
@@ -65,9 +47,18 @@
 			<h3>Clear all</h3>
 			<h5>Do you really want to clear all records for bucket Testbucket?</h5><br />
 		</div>
-		<div class="modal-body">
-			@*<input type="text" placeholder='Name of bucket'>
-			<input type="text" placeholder='Descriptioon'>*@
+		<div class="modal-footer">
+			<a href="#" class="btn" data-dismiss="modal">No</a>
+			<a href="#" class="btn btn-primary">Yes</a>
+		</div>
+	</div>
+	<!-- ----------------------- -->
+	<!-- delete bucket modal -->
+	<div class="modal fade" id="delete-bucket-modal">
+		<div class="modal-header">
+			<a class="close" data-dismiss="modal">&times;</a>
+			<h3>Delete bucket</h3>
+			<h5>Do you really want to delete the bucket Testbucket?</h5><br />
 		</div>
 		<div class="modal-footer">
 			<a href="#" class="btn" data-dismiss="modal">No</a>
@@ -75,16 +66,25 @@
 		</div>
 	</div>
 	<!-- ----------------------- -->
-	<!-- clear all modal -->
-	<div class="modal fade" id="delete-bucket-modal">
+	<!-- delete row modal -->
+	<div class="modal fade" id="delete-row-modal">
 		<div class="modal-header">
 			<a class="close" data-dismiss="modal">&times;</a>
-			<h3>Delete bucket</h3>
-			<h5>Do you really want to delete the bucket Testbucket?</h5><br />
+			<h3>Delete row</h3>
+			<h5>Do you really want to delete the row 234 in the bucket Testbucket?</h5><br />
 		</div>
-		<div class="modal-body">
-			@*<input type="text" placeholder='Name of bucket'>
-			<input type="text" placeholder='Descriptioon'>*@
+		<div class="modal-footer">
+			<a href="#" class="btn" data-dismiss="modal">No</a>
+			<a href="#" class="btn btn-primary">Yes</a>
+		</div>
+	</div>
+	<!-- ----------------------- -->
+	<!-- clear row modal -->
+	<div class="modal fade" id="clear-row-modal">
+		<div class="modal-header">
+			<a class="close" data-dismiss="modal">&times;</a>
+			<h3>Clear row</h3>
+			<h5>Do you really want to clear the row 234 in the bucket Testbucket?</h5><br />
 		</div>
 		<div class="modal-footer">
 			<a href="#" class="btn" data-dismiss="modal">No</a>

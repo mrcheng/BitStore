@@ -1,5 +1,6 @@
 ﻿@using BitStoreWeb.Endpoints.Bucket
 @model BitStoreWeb.Endpoints.Buckets.BucketsViewModel
+@using BitStoreWeb.Endpoints.HowTo
 @using System
 @using FubuMVC.Core.UI
 @this.Partial(Model.Inner)
@@ -31,6 +32,7 @@
 		</div>
 		-->
 
+		<a href="@(Urls.UrlFor<HowToInputModel>())" target="_self">Learn more how to use buckets</a>
 
 		<!-- create new bucket modal -->
 		<div class="modal fade" id="create-new-bucket-modal">
