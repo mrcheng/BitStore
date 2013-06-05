@@ -30,3 +30,21 @@
 2.	$.bitStore.set(bucket, '1337'());
 3.	highscore = $.bitStore.get(bucket);
 </pre>
+
+<h3>5. Example</h3>
+<label>Enter something</label>
+<textarea id="input"></textarea>
+<div class="clearfix"></div>
+<button class="btn">Show me something</button>
+<div class="result" style="display:none;">
+	<h2 id="stringFromSpaceOutput">1345</h2>
+	<p>Voilá! This string has traveled in space...</p>
+</div>
+
+<script type="text/javascript">
+	$(".btn").click(function () {
+		var epicStringFromSpace = $('#input').val();
+		$('#stringFromSpaceOutput').html(epicStringFromSpace);
+		$(".result").show();
+	});
+</script>
