@@ -1,8 +1,57 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="py-2">
+    <div class="p-4 p-md-5 mb-4 rounded-3 bg-light border">
+        <div class="container-fluid py-3">
+            <h1 class="display-5 fw-bold">BitStore</h1>
+            <p class="col-md-9 fs-5 mb-4">
+                Local storage, now global. This is a simple multi-page UI scaffold using Bootstrap and jQuery through Vite.
+            </p>
+            <a asp-controller="Buckets" asp-action="Index" class="btn btn-primary btn-lg">Browse Buckets</a>
+        </div>
+    </div>
+</section>
+
+<section class="row g-3">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Buckets</h5>
+                <p class="card-text">See available buckets and jump into one.</p>
+                <a asp-controller="Buckets" asp-action="Index" class="btn btn-outline-primary">Open</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Tutorial</h5>
+                <p class="card-text">Step-by-step setup and API usage instructions.</p>
+                <a asp-controller="HowTo" asp-action="Index" class="btn btn-outline-primary">Open</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">API</h5>
+                <p class="card-text">Swagger docs and endpoint testing.</p>
+                <a href="/api" class="btn btn-outline-primary">Open</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mt-4">
+    <h4 class="mb-3">Sample</h4>
+    <pre class="code-sample mb-0"><code>const base = "https://your-host/api/buckets/your-slug";
+await fetch(`${base}/records`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json", "X-BitStore-Key": "your-key" },
+  body: JSON.stringify({ value: "1337" })
+});
+const latest = await fetch(`${base}/latest`).then(r => r.json());
+console.log(latest);</code></pre>
+</section>

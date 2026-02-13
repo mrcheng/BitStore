@@ -16,3 +16,19 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.brand-logo {
+  height: 28px;
+  width: auto;
+}
+
+.code-sample {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 0.5rem;
+  color: #d1d5db;
+  font-size: 0.9rem;
+  margin: 0;
+  padding: 1rem;
+  white-space: pre-wrap;
+}

@@ -1,0 +1,80 @@
+@model BitStoreWeb.Net9.Models.BucketsViewModel
+@{
+    ViewData["Title"] = "Buckets";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h3 mb-0">Buckets</h1>
+</div>
+
+@if (TempData["StatusMessage"] is string statusMessage)
+{
+    <div class="alert alert-success" role="alert">@statusMessage</div>
+}
+
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger" role="alert">@errorMessage</div>
+}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h2 class="h5 mb-3">Create bucket</h2>
+        <form asp-action="Create" asp-controller="Buckets" method="post" class="row g-3">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="col-md-5">
+                <label asp-for="NewBucketName" class="form-label"></label>
+                <input asp-for="NewBucketName" class="form-control" />
+                <span asp-validation-for="NewBucketName" class="text-danger"></span>
+            </div>
+            <div class="col-md-5">
+                <label asp-for="NewBucketDescription" class="form-label"></label>
+                <input asp-for="NewBucketDescription" class="form-control" />
+                <span asp-validation-for="NewBucketDescription" class="text-danger"></span>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-success align-self-end">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<p class="text-muted">Your buckets and API keys.</p>
+
+@if (Model.Buckets.Count == 0)
+{
+    <div class="alert alert-info mb-0">No buckets yet. Create your first bucket above.</div>
+}
+else
+{
+    <div class="list-group mb-3">
+        @foreach (var bucket in Model.Buckets)
+        {
+            <div class="list-group-item">
+                <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+                    <div>
+                        <h5 class="mb-1">@bucket.Name</h5>
+                        <p class="text-muted mb-2">@(string.IsNullOrWhiteSpace(bucket.Description) ? "No description." : bucket.Description)</p>
+                        <div class="small text-muted">Slug: <code>@bucket.Slug</code></div>
+                        <div class="small text-muted">Write key: <code>@bucket.WriteApiKey</code></div>
+                        <div class="small text-muted">
+                            Records: @bucket.RecordCount
+                            <span class="mx-1">|</span>
+                            Updated: @bucket.UpdatedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+                        </div>
+                    </div>
+                    <div>
+                        <a asp-controller="Bucket" asp-action="Index" asp-route-id="@bucket.Id" class="btn btn-primary btn-sm">Open</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<a asp-controller="HowTo" asp-action="Index" class="btn btn-link px-0">Read tutorial</a>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,4 +1,23 @@
 @inject IWebHostEnvironment Environment
+@{
+    var currentController = (ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty).ToLowerInvariant();
+    var requestPath = Context.Request.Path;
+    var isApiNavActive = requestPath.StartsWithSegments("/api") || requestPath.StartsWithSegments("/swagger");
+    var isDemoNavActive = requestPath.StartsWithSegments("/demo");
+    string NavClass(params string[] controllers)
+    {
+        foreach (var controller in controllers)
+        {
+            if (currentController == controller.ToLowerInvariant())
+            {
+                return "nav-link active";
+            }
+        }
+
+        return "nav-link";
+    }
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -8,7 +27,7 @@
     <title>@ViewData["Title"] - BitStoreWeb.Net9</title>
     @if (Environment.IsDevelopment())
     {
-        <script type="module" src="http://localhost:5173/@vite/client"></script>
+        <script type="module" src="http://localhost:5173/@@vite/client"></script>
         <script type="module" src="http://localhost:5173/frontend/main.js"></script>
     }
     else
@@ -17,35 +36,66 @@
     }
     <link rel="stylesheet" href="~/BitStoreWeb.Net9.styles.css" asp-append-version="true" />
 </head>
-<body>
+<body class="bg-body-tertiary d-flex flex-column min-vh-100">
     <header>
-        <nav>
-            <div>
-                <a asp-area="" asp-controller="Home" asp-action="Index">
-                    <img src="~/Images/logoB.png" alt="BitStore logo" style="height: 28px;" />
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center gap-2" asp-area="" asp-controller="Home" asp-action="Index">
+                    <img class="brand-logo" src="~/Images/logoB.png" alt="BitStore logo" />
+                    <span>BitStore</span>
                 </a>
-                <div>
-                    <ul>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-nav" aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div id="main-nav" class="collapse navbar-collapse">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="@NavClass("Home")" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="@NavClass("Buckets", "Bucket")" asp-controller="Buckets" asp-action="Index">Buckets</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="@NavClass("HowTo")" asp-controller="HowTo" asp-action="Index">Tutorial</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="@(isApiNavActive ? "nav-link active" : "nav-link")" href="/api">API</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="@(isDemoNavActive ? "nav-link active" : "nav-link")" href="/demo">Demo</a>
+                        </li>
+                        @if (isAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <span class="nav-link disabled text-light">Hi @User.Identity?.Name</span>
+                            </li>
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-link nav-link">Logout</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="@NavClass("Account")" asp-controller="Account" asp-action="Login">Login</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+    <main role="main" class="container py-4 flex-grow-1">
+        <div class="bg-white border rounded-3 p-4 shadow-sm">
             @RenderBody()
-        </main>
-    </div>
+        </div>
+    </main>
 
-    <footer class="border-top footer text-muted">
+    <footer class="border-top py-3 text-muted bg-white">
         <div class="container">
-            &copy; 2026 - BitStoreWeb.Net9 - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2026 - BitStore
         </div>
     </footer>
     @if (!Environment.IsDevelopment())

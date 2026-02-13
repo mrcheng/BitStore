@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Testbucket 1 Viewer</title>
+    <style>
+        body {
+            font-family: Segoe UI, Arial, sans-serif;
+            margin: 2rem;
+            line-height: 1.4;
+        }
+
+        pre {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 1rem;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Testbucket 1</h1>
+    <pre id="output">Loading...</pre>
+
+    <script>
+        const apiUrl = "https://localhost:7001/api/buckets/testbucket-1";
+        const output = document.getElementById("output");
+
+        async function loadBucket() {
+            try {
+                const response = await fetch(apiUrl, {
+                    headers: { "Accept": "application/json" }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const bucket = data.bucket ?? {};
+                const latest = data.latestRecord ?? {};
+
+                output.textContent =
+`Name: ${bucket.name ?? ""}
+Description: ${bucket.description ?? ""}
+Slug: ${bucket.slug ?? ""}
+Record count: ${bucket.recordCount ?? 0}
+Latest value: ${latest.value ?? "(none)"}
+Latest created: ${latest.createdUtc ?? "(n/a)"}
+Latest updated: ${latest.updatedUtc ?? "(n/a)"}`;
+            } catch (error) {
+                output.textContent = `Failed to load bucket: ${error.message}`;
+            }
+        }
+
+        loadBucket();
+    </script>
+</body>
+</html>

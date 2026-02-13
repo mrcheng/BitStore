@@ -1,0 +1,110 @@
+@model BitStoreWeb.Net9.Models.BucketDetailsViewModel
+@{
+    ViewData["Title"] = "Bucket";
+}
+
+<div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+    <div>
+        <h1 class="h3 mb-1">@Model.Name</h1>
+        <p class="text-muted mb-1">@(string.IsNullOrWhiteSpace(Model.Description) ? "No description." : Model.Description)</p>
+        <div class="small text-muted">Slug: <code>@Model.Slug</code></div>
+        <div class="small text-muted">Write key: <code>@Model.WriteApiKey</code></div>
+    </div>
+    <div class="d-flex gap-2">
+        <form asp-action="ClearAll" asp-controller="Bucket" asp-route-id="@Model.Id" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-secondary">Clear All Records</button>
+        </form>
+        <form asp-action="DeleteBucket" asp-controller="Bucket" asp-route-id="@Model.Id" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-danger">Delete Bucket</button>
+        </form>
+    </div>
+</div>
+
+@if (TempData["StatusMessage"] is string statusMessage)
+{
+    <div class="alert alert-success" role="alert">@statusMessage</div>
+}
+
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger" role="alert">@errorMessage</div>
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form asp-action="AddRecord" asp-controller="Bucket" asp-route-id="@Model.Id" method="post" class="row g-2">
+            @Html.AntiForgeryToken()
+            <div class="col-md-9">
+                <input type="text" name="value" class="form-control" placeholder="Add a new value" required maxlength="2048" />
+            </div>
+            <div class="col-md-3 d-grid">
+                <button type="submit" class="btn btn-primary">Add Record</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="alert alert-secondary">
+    <div class="small">External API base: <code>/api/buckets/@Model.Slug</code></div>
+    <div class="small">Write key header: <code>X-BitStore-Key: @Model.WriteApiKey</code></div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th style="width: 8%;">#</th>
+                <th style="width: 42%;">Value</th>
+                <th style="width: 25%;">Created</th>
+                <th style="width: 25%;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Records.Count == 0)
+            {
+                <tr>
+                    <td colspan="4" class="text-muted">No records yet.</td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var record in Model.Records)
+                {
+                    <tr>
+                        <td>@record.Id</td>
+                        <td>
+                            <form asp-action="UpdateRecord" asp-controller="Bucket" asp-route-id="@Model.Id" method="post" class="d-flex gap-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="recordId" value="@record.Id" />
+                                <input type="text" name="value" class="form-control form-control-sm" value="@record.Value" maxlength="2048" />
+                                <button type="submit" class="btn btn-outline-primary btn-sm">Save</button>
+                            </form>
+                        </td>
+                        <td>
+                            <div>@record.CreatedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</div>
+                            <div class="small text-muted">Updated: @record.UpdatedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</div>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-2">
+                                <form asp-action="ClearRecord" asp-controller="Bucket" asp-route-id="@Model.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="recordId" value="@record.Id" />
+                                    <button type="submit" class="btn btn-outline-warning btn-sm">Clear</button>
+                                </form>
+                                <form asp-action="DeleteRecord" asp-controller="Bucket" asp-route-id="@Model.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="recordId" value="@record.Id" />
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<a asp-controller="Buckets" asp-action="Index" class="btn btn-link px-0">Back to buckets</a>

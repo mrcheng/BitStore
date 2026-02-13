@@ -1,0 +1,84 @@
+@{
+    ViewData["Title"] = "Tutorial";
+    var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+}
+
+<h1 class="h3 mb-3">BitStore Tutorial</h1>
+<p class="text-muted mb-4">Create an account, create a bucket, copy your write token, then use GET/POST/PUT/DELETE.</p>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 mb-2">1. Create an account</h2>
+        <p class="mb-2">Open <a asp-controller="Account" asp-action="Login">Login</a> and sign in with a username/password.</p>
+        <p class="small text-muted mb-0">First login creates the first account as <code>SuperUser</code>.</p>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 mb-2">2. Create a bucket and copy credentials</h2>
+        <p class="mb-2">Open <a asp-controller="Buckets" asp-action="Index">Buckets</a>, create a bucket, then open it.</p>
+        <p class="mb-0">From the bucket page copy:</p>
+        <ul class="mb-0">
+            <li><code>Slug</code> (used in the URL)</li>
+            <li><code>Write key</code> (your write token, sent as <code>X-BitStore-Key</code>)</li>
+        </ul>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 mb-2">3. Read bucket data (GET)</h2>
+        <pre class="code-sample mb-0"><code># Bucket + latest record
+curl "@baseUrl/api/buckets/your-slug"
+
+# Latest record only
+curl "@baseUrl/api/buckets/your-slug/latest"
+
+# List recent records (optional take=1..200)
+curl "@baseUrl/api/buckets/your-slug/records?take=50"</code></pre>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 mb-2">4. Add a record (POST)</h2>
+        <pre class="code-sample mb-0"><code>curl -X POST "@baseUrl/api/buckets/your-slug/records" ^
+  -H "Content-Type: application/json" ^
+  -H "X-BitStore-Key: your-write-key" ^
+  -d "{\"value\":\"hello world\"}"</code></pre>
+        <p class="small text-muted mt-2 mb-0">You can also send the key as query string: <code>?apiKey=your-write-key</code>.</p>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 mb-2">5. Update a record (PUT)</h2>
+        <pre class="code-sample mb-0"><code>curl -X PUT "@baseUrl/api/buckets/your-slug/records/123" ^
+  -H "Content-Type: application/json" ^
+  -H "X-BitStore-Key: your-write-key" ^
+  -d "{\"value\":\"updated value\"}"</code></pre>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 mb-2">6. Delete/clear records (DELETE/POST)</h2>
+        <pre class="code-sample mb-0"><code># Clear one record value (keeps row)
+curl -X POST "@baseUrl/api/buckets/your-slug/records/123/clear" ^
+  -H "X-BitStore-Key: your-write-key"
+
+# Delete one record
+curl -X DELETE "@baseUrl/api/buckets/your-slug/records/123" ^
+  -H "X-BitStore-Key: your-write-key"
+
+# Delete all records
+curl -X DELETE "@baseUrl/api/buckets/your-slug/records" ^
+  -H "X-BitStore-Key: your-write-key"</code></pre>
+    </div>
+</div>
+
+<div class="alert alert-secondary mb-0">
+    <div><strong>Local base URL:</strong> <code>@baseUrl</code></div>
+    <div><strong>Docs:</strong> <a href="/api">Swagger</a></div>
+</div>
