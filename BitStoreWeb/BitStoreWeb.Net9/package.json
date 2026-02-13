@@ -1,0 +1,17 @@
+{
+  "name": "bitstoreweb.net9",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "private": true,
+  "dependencies": {
+    "bootstrap": "5.3",
+    "jquery": "^4.0.0"
+  },
+  "devDependencies": {
+    "vite": "^7.3.1"
+  }
+}
