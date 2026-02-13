@@ -3,59 +3,252 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Testbucket 1 Viewer</title>
+    <title>BitStore Simple Demo</title>
     <style>
         body {
             font-family: Segoe UI, Arial, sans-serif;
             margin: 2rem;
-            line-height: 1.4;
+            max-width: 840px;
+            line-height: 1.5;
+        }
+
+        h1 {
+            margin-bottom: 0.25rem;
+        }
+
+        h2 {
+            margin: 1.25rem 0 0.5rem;
+        }
+
+        p {
+            margin: 0.25rem 0 0.75rem;
+        }
+
+        .muted {
+            color: #555;
+        }
+
+        .box {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            min-width: 260px;
+            flex: 1;
+        }
+
+        label {
+            font-weight: 600;
+        }
+
+        input,
+        textarea,
+        button {
+            font: inherit;
+            padding: 0.5rem 0.6rem;
+            border-radius: 6px;
+            border: 1px solid #cfcfcf;
+        }
+
+        button {
+            background: #111;
+            color: #fff;
+            border-color: #111;
+            cursor: pointer;
+            width: fit-content;
         }
 
         pre {
-            background: #f5f5f5;
+            margin: 0.5rem 0 0;
+            background: #f7f7f7;
             border: 1px solid #ddd;
             border-radius: 6px;
-            padding: 1rem;
+            padding: 0.85rem;
             white-space: pre-wrap;
+            word-break: break-word;
         }
     </style>
 </head>
 <body>
-    <h1>Testbucket 1</h1>
-    <pre id="output">Loading...</pre>
+    <h1>BitStore Demo (Simple)</h1>
+    <p class="muted">
+        Logged-out viewer page: read with <code>GET</code>, write with <code>POST</code> + write key.
+    </p>
+
+    <div class="box">
+        <h2>Connection</h2>
+        <div class="row">
+            <div class="field">
+                <label for="baseUrlInput">Base URL</label>
+                <input id="baseUrlInput" type="text" />
+            </div>
+            <div class="field">
+                <label for="slugInput">Bucket Slug (public id)</label>
+                <input id="slugInput" type="text" value="testbucket-1" />
+            </div>
+        </div>
+        <p class="muted">Example: <code>https://localhost:7001</code></p>
+    </div>
+
+    <div class="box">
+        <h2>1) Get Bucket Value (GET)</h2>
+        <p class="muted">Reads <code>/api/buckets/{slug}</code> and shows latest value.</p>
+        <button id="getButton" type="button">Get Bucket</button>
+        <pre id="getOutput">No data yet.</pre>
+    </div>
+
+    <div class="box">
+        <h2>2) Put/Add Value (POST)</h2>
+        <p class="muted">Sends <code>POST /api/buckets/{slug}/records</code> with your write key.</p>
+        <div class="row">
+            <div class="field">
+                <label for="writeKeyInput">Write Key (secret)</label>
+                <input id="writeKeyInput" type="password" placeholder="paste write key here" />
+            </div>
+            <div class="field">
+                <label for="valueInput">Value to Add</label>
+                <textarea id="valueInput" rows="3" placeholder="new value"></textarea>
+            </div>
+        </div>
+        <button id="postButton" type="button">Post Value</button>
+        <pre id="postOutput">No write attempt yet.</pre>
+    </div>
+
+    <p id="status" class="muted">Ready.</p>
 
     <script>
-        const apiUrl = "https://localhost:7001/api/buckets/testbucket-1";
-        const output = document.getElementById("output");
+        const baseUrlInput = document.getElementById("baseUrlInput");
+        const slugInput = document.getElementById("slugInput");
+        const writeKeyInput = document.getElementById("writeKeyInput");
+        const valueInput = document.getElementById("valueInput");
+        const getButton = document.getElementById("getButton");
+        const postButton = document.getElementById("postButton");
+        const getOutput = document.getElementById("getOutput");
+        const postOutput = document.getElementById("postOutput");
+        const status = document.getElementById("status");
 
-        async function loadBucket() {
+        function defaultBaseUrl() {
+            return window.location.origin && window.location.origin.startsWith("http")
+                ? window.location.origin
+                : "https://localhost:7001";
+        }
+
+        function normalizeBaseUrl(baseUrl) {
+            return (baseUrl || "").trim().replace(/\/+$/, "");
+        }
+
+        function readSlug() {
+            const slug = (slugInput.value || "").trim();
+            if (!slug) {
+                throw new Error("Bucket slug is required.");
+            }
+
+            return slug;
+        }
+
+        function buildBucketUrl() {
+            const baseUrl = normalizeBaseUrl(baseUrlInput.value);
+            const slug = encodeURIComponent(readSlug());
+            return `${baseUrl}/api/buckets/${slug}`;
+        }
+
+        async function getBucket() {
             try {
-                const response = await fetch(apiUrl, {
-                    headers: { "Accept": "application/json" }
-                });
-
+                const url = buildBucketUrl();
+                status.textContent = "Loading bucket...";
+                const response = await fetch(url, { headers: { "Accept": "application/json" } });
+                const text = await response.text();
+                const data = text ? JSON.parse(text) : {};
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status} ${response.statusText}`);
                 }
 
-                const data = await response.json();
-                const bucket = data.bucket ?? {};
-                const latest = data.latestRecord ?? {};
-
-                output.textContent =
-`Name: ${bucket.name ?? ""}
-Description: ${bucket.description ?? ""}
-Slug: ${bucket.slug ?? ""}
-Record count: ${bucket.recordCount ?? 0}
+                const bucket = data.bucket || {};
+                const latest = data.latestRecord || {};
+                getOutput.textContent =
+`Bucket name: ${bucket.name || ""}
+Description: ${bucket.description || ""}
+Slug: ${bucket.slug || ""}
+Record count: ${bucket.recordCount || 0}
 Latest value: ${latest.value ?? "(none)"}
-Latest created: ${latest.createdUtc ?? "(n/a)"}
-Latest updated: ${latest.updatedUtc ?? "(n/a)"}`;
+Latest updated: ${latest.updatedUtc || "(n/a)"}
+
+Raw response:
+${JSON.stringify(data, null, 2)}`;
+                status.textContent = "Bucket loaded.";
             } catch (error) {
-                output.textContent = `Failed to load bucket: ${error.message}`;
+                getOutput.textContent = `Read failed: ${error.message}`;
+                status.textContent = "Read failed.";
             }
         }
 
-        loadBucket();
+        async function postValue() {
+            try {
+                const baseUrl = normalizeBaseUrl(baseUrlInput.value);
+                const slug = encodeURIComponent(readSlug());
+                const writeKey = (writeKeyInput.value || "").trim();
+                const value = (valueInput.value || "").trim();
+                if (!writeKey) {
+                    throw new Error("Write key is required.");
+                }
+
+                if (!value) {
+                    throw new Error("Value is required.");
+                }
+
+                status.textContent = "Posting value...";
+                const response = await fetch(`${baseUrl}/api/buckets/${slug}/records`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-BitStore-Key": writeKey
+                    },
+                    body: JSON.stringify({ value })
+                });
+                const text = await response.text();
+                const data = text ? JSON.parse(text) : {};
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} ${response.statusText}`);
+                }
+
+                postOutput.textContent = `Write successful.\n\n${JSON.stringify(data, null, 2)}`;
+                status.textContent = "Value posted.";
+                await getBucket();
+            } catch (error) {
+                postOutput.textContent = `Write failed: ${error.message}`;
+                status.textContent = "Write failed.";
+            }
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        baseUrlInput.value = params.get("base") || defaultBaseUrl();
+        if (params.get("slug")) {
+            slugInput.value = params.get("slug") || slugInput.value;
+        }
+
+        getButton.addEventListener("click", getBucket);
+        postButton.addEventListener("click", postValue);
+        slugInput.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                getBucket();
+            }
+        });
+
+        getBucket();
     </script>
 </body>
 </html>

@@ -7,8 +7,9 @@
         <div class="container-fluid py-3">
             <h1 class="display-5 fw-bold">BitStore</h1>
             <p class="col-md-9 fs-5 mb-4">
-                Local storage, now global. This is a simple multi-page UI scaffold using Bootstrap and jQuery through Vite.
+                Store values anywhere, instantly. Push data from your app, script, CI job, or device, then fetch it from one lightweight API.
             </p>
+            <p class="text-muted mb-4">Create a bucket, copy the slug and key, and you are live in minutes. Easy as a bit.</p>
             <a asp-controller="Buckets" asp-action="Index" class="btn btn-primary btn-lg">Browse Buckets</a>
         </div>
     </div>
@@ -19,7 +20,7 @@
         <div class="card h-100">
             <div class="card-body">
                 <h5 class="card-title">Buckets</h5>
-                <p class="card-text">See available buckets and jump into one.</p>
+                <p class="card-text">Create buckets, copy slugs, and manage write keys in one place.</p>
                 <a asp-controller="Buckets" asp-action="Index" class="btn btn-outline-primary">Open</a>
             </div>
         </div>
@@ -37,7 +38,7 @@
         <div class="card h-100">
             <div class="card-body">
                 <h5 class="card-title">API</h5>
-                <p class="card-text">Swagger docs and endpoint testing.</p>
+                <p class="card-text">Read/write endpoints with Swagger docs and quick testing.</p>
                 <a href="/api" class="btn btn-outline-primary">Open</a>
             </div>
         </div>

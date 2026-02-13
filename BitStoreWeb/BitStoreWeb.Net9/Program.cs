@@ -111,7 +111,6 @@ app.UseSwaggerUI(options =>
 app.MapStaticAssets();
 app.MapControllers();
 app.MapGet("/api", () => Results.Redirect("/swagger", permanent: false));
-app.MapGet("/api/", () => Results.Redirect("/swagger", permanent: false));
 app.MapGet("/demo", (IWebHostEnvironment env) =>
 {
     var demoPath = Path.GetFullPath(Path.Combine(env.ContentRootPath, "..", "..", "testbucket-1-view.html"));
