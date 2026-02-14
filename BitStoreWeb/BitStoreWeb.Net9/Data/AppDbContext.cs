@@ -47,7 +47,7 @@ public class AppDbContext : DbContext
         {
             entity.ToTable("BucketRecords");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.Value).HasMaxLength(2048);
+            entity.Property(x => x.Value).HasMaxLength(8);
             entity.HasIndex(x => new { x.BucketId, x.CreatedUtc });
             entity.HasOne(x => x.Bucket)
                 .WithMany(x => x.Records)

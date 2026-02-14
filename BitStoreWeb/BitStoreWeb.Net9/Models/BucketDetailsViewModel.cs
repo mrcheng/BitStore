@@ -15,7 +15,7 @@ public class BucketDetailsViewModel
     public string WriteApiKey { get; init; } = string.Empty;
 
     [Required]
-    [StringLength(2048)]
+    [StringLength(8)]
     [Display(Name = "Value")]
     public string NewRecordValue { get; set; } = string.Empty;
 

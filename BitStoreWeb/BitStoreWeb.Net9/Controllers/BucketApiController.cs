@@ -415,7 +415,7 @@ public class BucketApiController : ControllerBase
     public sealed class UpsertBucketRecordRequest
     {
         [Required]
-        [StringLength(2048)]
+        [StringLength(8, ErrorMessage = "Value must be 8 characters or fewer.")]
         public string Value { get; set; } = string.Empty;
     }
 }

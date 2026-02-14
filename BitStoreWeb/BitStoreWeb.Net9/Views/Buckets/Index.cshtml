@@ -3,8 +3,9 @@
     ViewData["Title"] = "Buckets";
 }
 
-<div class="d-flex align-items-center justify-content-between mb-3">
-    <h1 class="h3 mb-0">Buckets</h1>
+<div class="mb-3">
+    <h1 class="section-title mb-1">Your Buckets</h1>
+    <p class="section-subtitle mb-0">Create and manage API-ready storage buckets with dedicated write keys.</p>
 </div>
 
 @if (TempData["StatusMessage"] is string statusMessage)
@@ -17,7 +18,7 @@
     <div class="alert alert-danger" role="alert">@errorMessage</div>
 }
 
-<div class="card mb-4">
+<div class="card mb-4 fade-in-up">
     <div class="card-body">
         <h2 class="h5 mb-3">Create bucket</h2>
         <form asp-action="Create" asp-controller="Buckets" method="post" class="row g-3">
@@ -40,41 +41,141 @@
     </div>
 </div>
 
-<p class="text-muted">Your buckets and API keys.</p>
+<p class="text-muted mb-3">Each bucket has a public slug and private write key.</p>
 
-@if (Model.Buckets.Count == 0)
-{
-    <div class="alert alert-info mb-0">No buckets yet. Create your first bucket above.</div>
-}
-else
-{
-    <div class="list-group mb-3">
-        @foreach (var bucket in Model.Buckets)
-        {
-            <div class="list-group-item">
-                <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
-                    <div>
-                        <h5 class="mb-1">@bucket.Name</h5>
-                        <p class="text-muted mb-2">@(string.IsNullOrWhiteSpace(bucket.Description) ? "No description." : bucket.Description)</p>
-                        <div class="small text-muted">Slug: <code>@bucket.Slug</code></div>
-                        <div class="small text-muted">Write key: <code>@bucket.WriteApiKey</code></div>
-                        <div class="small text-muted">
-                            Records: @bucket.RecordCount
-                            <span class="mx-1">|</span>
-                            Updated: @bucket.UpdatedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
-                        </div>
-                    </div>
-                    <div>
-                        <a asp-controller="Bucket" asp-action="Index" asp-route-id="@bucket.Id" class="btn btn-primary btn-sm">Open</a>
-                    </div>
-                </div>
-            </div>
-        }
+<div class="card mb-3 fade-in-up fade-delay-1">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="buckets-table" class="table table-striped align-middle w-100">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Slug</th>
+                        <th>Write key</th>
+                        <th>Records</th>
+                        <th>Updated</th>
+                        <th></th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
     </div>
-}
+</div>
 
 <a asp-controller="HowTo" asp-action="Index" class="btn btn-link px-0">Read tutorial</a>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const tableElement = document.getElementById("buckets-table");
+            if (!tableElement || !window.DataTable) {
+                return;
+            }
+
+            const bucketUrlTemplate = '@Url.Action("Index", "Bucket", new { id = "__id__" })';
+
+            const escapeHtml = (value) => {
+                const div = document.createElement("div");
+                div.textContent = value ?? "";
+                return div.innerHTML;
+            };
+
+            new window.DataTable(tableElement, {
+                ajax: {
+                    url: '@Url.Action("Data", "Buckets")',
+                    dataSrc: "data"
+                },
+                autoWidth: false,
+                deferRender: true,
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100],
+                order: [[5, "desc"]],
+                language: {
+                    emptyTable: "No buckets yet. Create your first bucket above.",
+                    search: "Search",
+                    searchPlaceholder: "Name, slug, or description"
+                },
+                columns: [
+                    {
+                        data: "name",
+                        render: (data, type) => {
+                            const value = data ?? "";
+                            if (type !== "display") {
+                                return value;
+                            }
+
+                            return `<span class="fw-semibold">${escapeHtml(value)}</span>`;
+                        }
+                    },
+                    {
+                        data: "description",
+                        defaultContent: "",
+                        render: (data, type) => {
+                            const value = data ?? "";
+                            if (type !== "display") {
+                                return value;
+                            }
+
+                            return value
+                                ? escapeHtml(value)
+                                : '<span class="text-muted">No description.</span>';
+                        }
+                    },
+                    {
+                        data: "slug",
+                        render: (data, type) => {
+                            const value = data ?? "";
+                            if (type !== "display") {
+                                return value;
+                            }
+
+                            return `<code>${escapeHtml(value)}</code>`;
+                        }
+                    },
+                    {
+                        data: "writeApiKey",
+                        render: (data, type) => {
+                            const value = data ?? "";
+                            if (type !== "display") {
+                                return value;
+                            }
+
+                            return `<code>${escapeHtml(value)}</code>`;
+                        }
+                    },
+                    { data: "recordCount" },
+                    {
+                        data: "updatedUtc",
+                        render: (data, type) => {
+                            const value = data ?? "";
+                            if (type !== "display") {
+                                return value;
+                            }
+
+                            const parsed = new Date(value);
+                            return Number.isNaN(parsed.getTime())
+                                ? escapeHtml(value)
+                                : escapeHtml(parsed.toLocaleString());
+                        }
+                    },
+                    {
+                        data: "id",
+                        orderable: false,
+                        searchable: false,
+                        className: "text-end",
+                        render: (data, type) => {
+                            if (type !== "display") {
+                                return data;
+                            }
+
+                            const href = bucketUrlTemplate.replace("__id__", encodeURIComponent(String(data)));
+                            return `<a href="${href}" class="btn btn-primary btn-sm">Open</a>`;
+                        }
+                    }
+                ]
+            });
+        })();
+    </script>
 }

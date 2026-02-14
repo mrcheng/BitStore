@@ -10,6 +10,7 @@ namespace BitStoreWeb.Net9.Controllers;
 [Authorize]
 public class BucketController : Controller
 {
+    private const int MaxRecordValueLength = 8;
     private readonly AppDbContext _db;
 
     public BucketController(AppDbContext db)
@@ -60,10 +61,17 @@ public class BucketController : Controller
             return RedirectToAction(nameof(Index), new { id });
         }
 
+        var normalizedValue = value.Trim();
+        if (normalizedValue.Length > MaxRecordValueLength)
+        {
+            TempData["ErrorMessage"] = $"Value must be {MaxRecordValueLength} characters or fewer.";
+            return RedirectToAction(nameof(Index), new { id });
+        }
+
         _db.BucketRecords.Add(new BucketRecord
         {
             BucketId = bucket.Id,
-            Value = value.Trim(),
+            Value = normalizedValue,
             CreatedUtc = DateTime.UtcNow,
             UpdatedUtc = DateTime.UtcNow
         });
@@ -91,6 +99,13 @@ public class BucketController : Controller
             return RedirectToAction(nameof(Index), new { id });
         }
 
+        var normalizedValue = value.Trim();
+        if (normalizedValue.Length > MaxRecordValueLength)
+        {
+            TempData["ErrorMessage"] = $"Value must be {MaxRecordValueLength} characters or fewer.";
+            return RedirectToAction(nameof(Index), new { id });
+        }
+
         var bucket = await GetOwnedBucketAsync(id, userId.Value, cancellationToken);
         if (bucket is null)
         {
@@ -106,7 +121,7 @@ public class BucketController : Controller
             return RedirectToAction(nameof(Index), new { id });
         }
 
-        record.Value = value.Trim();
+        record.Value = normalizedValue;
         record.UpdatedUtc = DateTime.UtcNow;
         bucket.UpdatedUtc = DateTime.UtcNow;
         await _db.SaveChangesAsync(cancellationToken);

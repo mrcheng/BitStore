@@ -10,7 +10,7 @@ public class BucketRecord
 
     public Bucket Bucket { get; set; } = null!;
 
-    [MaxLength(2048)]
+    [MaxLength(8)]
     public string? Value { get; set; }
 
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;

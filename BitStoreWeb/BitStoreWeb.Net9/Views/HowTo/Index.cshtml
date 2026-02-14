@@ -3,10 +3,13 @@
     var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
 }
 
-<h1 class="h3 mb-3">BitStore Tutorial</h1>
-<p class="text-muted mb-4">Create an account, create a bucket, copy your write token, then use GET/POST/PUT/DELETE.</p>
+<div class="hero-surface mb-3 fade-in-up">
+    <span class="page-kicker">Developer Guide</span>
+    <h1 class="hero-title">BitStore Tutorial</h1>
+    <p class="hero-subtitle mb-0">Create an account, create a bucket, copy your write token, then use GET/POST/PUT/DELETE.</p>
+</div>
 
-<div class="alert alert-warning mb-3">
+<div class="alert alert-warning mb-3 fade-in-up fade-delay-1">
     <div class="fw-semibold mb-2">Visibility and security</div>
     <ul class="mb-0">
         <li>Read endpoints are public by slug. If someone knows your slug, they can fetch bucket data.</li>
@@ -15,7 +18,7 @@
     </ul>
 </div>
 
-<div class="card mb-3">
+<div class="card mb-3 fade-in-up fade-delay-1">
     <div class="card-body">
         <h2 class="h5 mb-2">1. Create an account</h2>
         <p class="mb-2">Open <a asp-controller="Account" asp-action="Login">Login</a> and sign in with a username/password.</p>
@@ -23,7 +26,7 @@
     </div>
 </div>
 
-<div class="card mb-3">
+<div class="card mb-3 fade-in-up fade-delay-2">
     <div class="card-body">
         <h2 class="h5 mb-2">2. Create a bucket and copy credentials</h2>
         <p class="mb-2">Open <a asp-controller="Buckets" asp-action="Index">Buckets</a>, create a bucket, then open it.</p>
@@ -35,59 +38,59 @@
     </div>
 </div>
 
-<div class="card mb-3">
+<div class="card mb-3 fade-in-up fade-delay-2">
     <div class="card-body">
         <h2 class="h5 mb-2">3. Read bucket data (GET)</h2>
-        <pre class="code-sample mb-0"><code># Bucket + latest record
-curl "@baseUrl/api/buckets/your-slug"
+        <pre class="code-sample mb-0"><code class="language-bash"><span class="tok-comment"># Bucket + latest record</span>
+<span class="tok-command">curl</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug"</span>
 
-# Latest record only
-curl "@baseUrl/api/buckets/your-slug/latest"
+<span class="tok-comment"># Latest record only</span>
+<span class="tok-command">curl</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/latest"</span>
 
-# List recent records (optional take=1..200)
-curl "@baseUrl/api/buckets/your-slug/records?take=50"</code></pre>
+<span class="tok-comment"># List recent records (optional take=1..200)</span>
+<span class="tok-command">curl</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/records?take=50"</span></code></pre>
     </div>
 </div>
 
-<div class="card mb-3">
+<div class="card mb-3 fade-in-up fade-delay-3">
     <div class="card-body">
         <h2 class="h5 mb-2">4. Add a record (POST)</h2>
-        <pre class="code-sample mb-0"><code>curl -X POST "@baseUrl/api/buckets/your-slug/records" ^
-  -H "Content-Type: application/json" ^
-  -H "X-BitStore-Key: your-write-key" ^
-  -d "{\"value\":\"hello world\"}"</code></pre>
-        <p class="small text-muted mt-2 mb-0">You can also send the key as query string: <code>?apiKey=your-write-key</code>.</p>
+        <pre class="code-sample mb-0"><code class="language-bash"><span class="tok-command">curl</span> <span class="tok-flag">-X</span> <span class="tok-string">POST</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/records"</span> ^
+  <span class="tok-flag">-H</span> <span class="tok-string">"Content-Type: application/json"</span> ^
+  <span class="tok-flag">-H</span> <span class="tok-string">"X-BitStore-Key: your-write-key"</span> ^
+  <span class="tok-flag">-d</span> <span class="tok-string">"{\"value\":\"hello123\"}"</span></code></pre>
+        <p class="small text-muted mt-2 mb-0">Value max length is <strong>8 characters</strong>. You can also send the key as query string: <code>?apiKey=your-write-key</code>.</p>
     </div>
 </div>
 
-<div class="card mb-3">
+<div class="card mb-3 fade-in-up fade-delay-3">
     <div class="card-body">
         <h2 class="h5 mb-2">5. Update a record (PUT)</h2>
-        <pre class="code-sample mb-0"><code>curl -X PUT "@baseUrl/api/buckets/your-slug/records/123" ^
-  -H "Content-Type: application/json" ^
-  -H "X-BitStore-Key: your-write-key" ^
-  -d "{\"value\":\"updated value\"}"</code></pre>
+        <pre class="code-sample mb-0"><code class="language-bash"><span class="tok-command">curl</span> <span class="tok-flag">-X</span> <span class="tok-string">PUT</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/records/123"</span> ^
+  <span class="tok-flag">-H</span> <span class="tok-string">"Content-Type: application/json"</span> ^
+  <span class="tok-flag">-H</span> <span class="tok-string">"X-BitStore-Key: your-write-key"</span> ^
+  <span class="tok-flag">-d</span> <span class="tok-string">"{\"value\":\"upd12345\"}"</span></code></pre>
     </div>
 </div>
 
-<div class="card mb-3">
+<div class="card mb-3 fade-in-up fade-delay-3">
     <div class="card-body">
         <h2 class="h5 mb-2">6. Delete/clear records (DELETE/POST)</h2>
-        <pre class="code-sample mb-0"><code># Clear one record value (keeps row)
-curl -X POST "@baseUrl/api/buckets/your-slug/records/123/clear" ^
-  -H "X-BitStore-Key: your-write-key"
+        <pre class="code-sample mb-0"><code class="language-bash"><span class="tok-comment"># Clear one record value (keeps row)</span>
+<span class="tok-command">curl</span> <span class="tok-flag">-X</span> <span class="tok-string">POST</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/records/123/clear"</span> ^
+  <span class="tok-flag">-H</span> <span class="tok-string">"X-BitStore-Key: your-write-key"</span>
 
-# Delete one record
-curl -X DELETE "@baseUrl/api/buckets/your-slug/records/123" ^
-  -H "X-BitStore-Key: your-write-key"
+<span class="tok-comment"># Delete one record</span>
+<span class="tok-command">curl</span> <span class="tok-flag">-X</span> <span class="tok-string">DELETE</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/records/123"</span> ^
+  <span class="tok-flag">-H</span> <span class="tok-string">"X-BitStore-Key: your-write-key"</span>
 
-# Delete all records
-curl -X DELETE "@baseUrl/api/buckets/your-slug/records" ^
-  -H "X-BitStore-Key: your-write-key"</code></pre>
+<span class="tok-comment"># Delete all records</span>
+<span class="tok-command">curl</span> <span class="tok-flag">-X</span> <span class="tok-string">DELETE</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/records"</span> ^
+  <span class="tok-flag">-H</span> <span class="tok-string">"X-BitStore-Key: your-write-key"</span></code></pre>
     </div>
 </div>
 
-<div class="alert alert-secondary mb-0">
+<div class="alert alert-secondary mb-0 fade-in-up fade-delay-3">
     <div><strong>Local base URL:</strong> <code>@baseUrl</code></div>
     <div><strong>Docs:</strong> <a href="/api">Swagger</a></div>
 </div>

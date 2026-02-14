@@ -9,6 +9,7 @@
   "private": true,
   "dependencies": {
     "bootstrap": "5.3",
+    "datatables.net-bs5": "^2.3.7",
     "jquery": "^4.0.0"
   },
   "devDependencies": {

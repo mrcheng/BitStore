@@ -3,9 +3,9 @@
     ViewData["Title"] = "Bucket";
 }
 
-<div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+<div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3 fade-in-up">
     <div>
-        <h1 class="h3 mb-1">@Model.Name</h1>
+        <h1 class="section-title mb-1">@Model.Name</h1>
         <p class="text-muted mb-1">@(string.IsNullOrWhiteSpace(Model.Description) ? "No description." : Model.Description)</p>
         <div class="small text-muted">Slug: <code>@Model.Slug</code></div>
         <div class="small text-muted">Write key: <code>@Model.WriteApiKey</code></div>
@@ -32,26 +32,27 @@
     <div class="alert alert-danger" role="alert">@errorMessage</div>
 }
 
-<div class="card mb-3">
+<div class="card mb-3 fade-in-up fade-delay-1">
     <div class="card-body">
         <form asp-action="AddRecord" asp-controller="Bucket" asp-route-id="@Model.Id" method="post" class="row g-2">
             @Html.AntiForgeryToken()
             <div class="col-md-9">
-                <input type="text" name="value" class="form-control" placeholder="Add a new value" required maxlength="2048" />
+                <input type="text" name="value" class="form-control" placeholder="Add a new value" required />
             </div>
             <div class="col-md-3 d-grid">
                 <button type="submit" class="btn btn-primary">Add Record</button>
             </div>
         </form>
+        <div class="small text-muted mt-2">Value max length: 8 characters.</div>
     </div>
 </div>
 
-<div class="alert alert-secondary">
+<div class="alert alert-secondary fade-in-up fade-delay-2">
     <div class="small">External API base: <code>/api/buckets/@Model.Slug</code></div>
     <div class="small">Write key header: <code>X-BitStore-Key: @Model.WriteApiKey</code></div>
 </div>
 
-<div class="table-responsive">
+<div class="table-responsive fade-in-up fade-delay-3">
     <table class="table table-striped align-middle">
         <thead>
             <tr>
@@ -78,7 +79,7 @@
                             <form asp-action="UpdateRecord" asp-controller="Bucket" asp-route-id="@Model.Id" method="post" class="d-flex gap-2">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="recordId" value="@record.Id" />
-                                <input type="text" name="value" class="form-control form-control-sm" value="@record.Value" maxlength="2048" />
+                                <input type="text" name="value" class="form-control form-control-sm" value="@record.Value" />
                                 <button type="submit" class="btn btn-outline-primary btn-sm">Save</button>
                             </form>
                         </td>
@@ -108,3 +109,47 @@
 </div>
 
 <a asp-controller="Buckets" asp-action="Index" class="btn btn-link px-0">Back to buckets</a>
+
+@section Scripts {
+    <script>
+        (() => {
+            const maxValueLength = 8;
+            const valueInputs = document.querySelectorAll('input[name="value"][type="text"]');
+            if (!valueInputs.length) {
+                return;
+            }
+
+            const validateValue = (input) => {
+                const value = input.value ?? "";
+                if (value.length > maxValueLength) {
+                    input.setCustomValidity(`Value must be ${maxValueLength} characters or fewer.`);
+                    input.classList.add("is-invalid");
+                    return false;
+                }
+
+                input.setCustomValidity("");
+                input.classList.remove("is-invalid");
+                return true;
+            };
+
+            valueInputs.forEach((input) => {
+                validateValue(input);
+                input.addEventListener("input", () => validateValue(input));
+
+                const form = input.closest("form");
+                if (!form) {
+                    return;
+                }
+
+                form.addEventListener("submit", (event) => {
+                    if (validateValue(input)) {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    input.reportValidity();
+                });
+            });
+        })();
+    </script>
+}

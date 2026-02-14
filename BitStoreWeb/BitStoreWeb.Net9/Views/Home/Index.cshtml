@@ -2,22 +2,27 @@
     ViewData["Title"] = "Home";
 }
 
-<section class="py-2">
-    <div class="p-4 p-md-5 mb-4 rounded-3 bg-light border">
-        <div class="container-fluid py-3">
-            <h1 class="display-5 fw-bold">BitStore</h1>
-            <p class="col-md-9 fs-5 mb-4">
-                Store values anywhere, instantly. Push data from your app, script, CI job, or device, then fetch it from one lightweight API.
-            </p>
-            <p class="text-muted mb-4">Create a bucket, copy the slug and key, and you are live in minutes. Easy as a bit.</p>
-            <a asp-controller="Buckets" asp-action="Index" class="btn btn-primary btn-lg">Browse Buckets</a>
-        </div>
+<section class="hero-surface fade-in-up">
+    <span class="page-kicker">Storage, Simplified</span>
+    <h1 class="hero-title">Store a value in seconds. Fetch it from anywhere.</h1>
+    <p class="hero-subtitle mb-4">
+        BitStore gives you a clean bucket API for lightweight cross-system data sharing.
+        Use it from apps, scripts, CI jobs, and devices with minimal setup.
+    </p>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-controller="Buckets" asp-action="Index" class="btn btn-primary btn-lg">Open Buckets</a>
+        <a href="/api" class="btn btn-outline-primary btn-lg">View API</a>
     </div>
+</section>
+
+<section class="mt-4">
+    <h2 class="section-title">Everything You Need To Ship Fast</h2>
+    <p class="section-subtitle mb-3">Simple workflow, explicit keys, and a trustworthy developer experience.</p>
 </section>
 
 <section class="row g-3">
     <div class="col-md-4">
-        <div class="card h-100">
+        <div class="card h-100 fade-in-up fade-delay-1">
             <div class="card-body">
                 <h5 class="card-title">Buckets</h5>
                 <p class="card-text">Create buckets, copy slugs, and manage write keys in one place.</p>
@@ -26,7 +31,7 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card h-100">
+        <div class="card h-100 fade-in-up fade-delay-2">
             <div class="card-body">
                 <h5 class="card-title">Tutorial</h5>
                 <p class="card-text">Step-by-step setup and API usage instructions.</p>
@@ -35,7 +40,7 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card h-100">
+        <div class="card h-100 fade-in-up fade-delay-3">
             <div class="card-body">
                 <h5 class="card-title">API</h5>
                 <p class="card-text">Read/write endpoints with Swagger docs and quick testing.</p>
@@ -46,13 +51,13 @@
 </section>
 
 <section class="mt-4">
-    <h4 class="mb-3">Sample</h4>
-    <pre class="code-sample mb-0"><code>const base = "https://your-host/api/buckets/your-slug";
-await fetch(`${base}/records`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json", "X-BitStore-Key": "your-key" },
-  body: JSON.stringify({ value: "1337" })
+    <h2 class="section-title mb-3">Quick Start Sample</h2>
+    <pre class="code-sample mb-0"><code class="language-javascript"><span class="tok-keyword">const</span> <span class="tok-var">base</span> <span class="tok-operator">=</span> <span class="tok-string">"https://your-host/api/buckets/your-slug"</span>;
+<span class="tok-keyword">await</span> <span class="tok-func">fetch</span>(<span class="tok-string">`${base}/records`</span>, {
+  <span class="tok-key">method</span>: <span class="tok-string">"POST"</span>,
+  <span class="tok-key">headers</span>: { <span class="tok-string">"Content-Type"</span>: <span class="tok-string">"application/json"</span>, <span class="tok-string">"X-BitStore-Key"</span>: <span class="tok-string">"your-key"</span> },
+  <span class="tok-key">body</span>: <span class="tok-func">JSON.stringify</span>({ <span class="tok-key">value</span>: <span class="tok-string">"1337"</span> })
 });
-const latest = await fetch(`${base}/latest`).then(r => r.json());
-console.log(latest);</code></pre>
+<span class="tok-keyword">const</span> <span class="tok-var">latestPayload</span> <span class="tok-operator">=</span> <span class="tok-keyword">await</span> <span class="tok-func">fetch</span>(<span class="tok-string">`${base}/latest`</span>).<span class="tok-func">then</span>(<span class="tok-var">r</span> <span class="tok-operator">=&gt;</span> <span class="tok-var">r</span>.<span class="tok-func">json</span>());
+<span class="tok-func">console.log</span>(latestPayload.<span class="tok-key">record</span>);</code></pre>
 </section>

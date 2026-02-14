@@ -20,7 +20,7 @@ public class BucketsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public IActionResult Index()
     {
         var userId = GetCurrentUserId();
         if (userId is null)
@@ -28,12 +28,31 @@ public class BucketsController : Controller
             return Challenge();
         }
 
-        var model = new BucketsViewModel
-        {
-            Buckets = await LoadBucketSummariesAsync(userId.Value, cancellationToken)
-        };
+        return View(new BucketsViewModel());
+    }
 
-        return View(model);
+    [HttpGet]
+    public async Task<IActionResult> Data(CancellationToken cancellationToken)
+    {
+        var userId = GetCurrentUserId();
+        if (userId is null)
+        {
+            return Challenge();
+        }
+
+        var buckets = await LoadBucketSummariesAsync(userId.Value, cancellationToken);
+        var data = buckets.Select(x => new
+        {
+            x.Id,
+            x.Name,
+            x.Description,
+            x.Slug,
+            x.WriteApiKey,
+            x.RecordCount,
+            x.UpdatedUtc
+        });
+
+        return Json(new { data });
     }
 
     [HttpPost]
