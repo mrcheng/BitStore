@@ -426,6 +426,7 @@
                 <div class="field">
                     <label for="writeKeyInput">Write Key (secret)</label>
                     <input id="writeKeyInput" type="password" placeholder="paste write key">
+                    <p class="endpoint" id="writeKeyHint">Paste the raw key token (48 chars). If you paste <code>X-BitStore-Key: ...</code>, it will be cleaned automatically.</p>
                 </div>
                 <div class="field" style="margin-top: 10px;">
                     <label for="valueInput">Value</label>
@@ -458,6 +459,7 @@
         const getOutput = document.getElementById("getOutput");
         const postOutput = document.getElementById("postOutput");
         const endpointPreview = document.getElementById("endpointPreview");
+        const writeKeyHint = document.getElementById("writeKeyHint");
         const valueWarning = document.getElementById("valueWarning");
         const status = document.getElementById("status");
         const statusText = document.getElementById("statusText");
@@ -577,16 +579,47 @@
         function buildWriteCurl() {
             const baseUrl = normalizeBaseUrl(baseUrlInput.value);
             const slug = encodeURIComponent(readSlug());
-            const writeKey = (writeKeyInput.value || "your-write-key").trim();
+            const writeKey = "$BITSTORE_WRITE_KEY";
             const value = (valueInput.value || "new value").trim();
             return `curl -X POST "${baseUrl}/api/buckets/${slug}/records" -H "Content-Type: application/json" -H "X-BitStore-Key: ${writeKey}" -d "{\\"value\\":\\"${value}\\"}"`;
+        }
+
+        function normalizeWriteKey(inputValue) {
+            const raw = (inputValue || "").trim();
+            if (!raw) {
+                return "";
+            }
+
+            const match = raw.match(/^x-bitstore-key\s*:\s*(.+)$/i);
+            return (match ? match[1] : raw).trim();
+        }
+
+        function updateWriteKeyHint() {
+            const raw = (writeKeyInput.value || "").trim();
+            const normalized = normalizeWriteKey(raw);
+            const looksLikeHeader = /^x-bitstore-key\s*:/i.test(raw);
+            if (looksLikeHeader) {
+                writeKeyHint.textContent = "Header prefix detected. Using token after ':'.";
+                writeKeyHint.style.color = "var(--warn)";
+                return;
+            }
+
+            if (!normalized) {
+                writeKeyHint.textContent = "Paste the raw key token (48 chars).";
+                writeKeyHint.style.color = "";
+                return;
+            }
+
+            writeKeyHint.textContent = `Write key length: ${normalized.length} characters.`;
+            writeKeyHint.style.color = "";
         }
 
         async function getBucket() {
             try {
                 setStatus("Loading bucket...", "loading");
                 const response = await fetch(buildBucketUrl(), {
-                    headers: { "Accept": "application/json" }
+                    headers: { "Accept": "application/json" },
+                    credentials: "omit"
                 });
                 const text = await response.text();
                 const data = safeParseJson(text);
@@ -617,7 +650,7 @@ ${JSON.stringify(data, null, 2)}`;
 
         async function postValue() {
             try {
-                const writeKey = (writeKeyInput.value || "").trim();
+                const writeKey = normalizeWriteKey(writeKeyInput.value);
                 const value = (valueInput.value || "").trim();
                 if (!writeKey) {
                     throw new Error("Write key is required.");
@@ -637,6 +670,7 @@ ${JSON.stringify(data, null, 2)}`;
 
                 const response = await fetch(`${baseUrl}/api/buckets/${slug}/records`, {
                     method: "POST",
+                    credentials: "omit",
                     headers: {
                         "Content-Type": "application/json",
                         "X-BitStore-Key": writeKey
@@ -653,6 +687,8 @@ ${JSON.stringify(data, null, 2)}`;
                 postOutput.textContent = `Write successful.\n\n${JSON.stringify(data, null, 2)}`;
                 updateQueryParams();
                 setStatus("Value posted.", "ok");
+                writeKeyHint.textContent = `Write key length: ${writeKey.length} characters.`;
+                writeKeyHint.style.color = "";
                 await getBucket();
             } catch (error) {
                 postOutput.textContent = `Write failed: ${error.message}`;
@@ -675,6 +711,7 @@ ${JSON.stringify(data, null, 2)}`;
 
         baseUrlInput.addEventListener("input", setEndpointPreview);
         slugInput.addEventListener("input", setEndpointPreview);
+        writeKeyInput.addEventListener("input", updateWriteKeyHint);
         valueInput.addEventListener("input", validateValueLength);
         slugInput.addEventListener("keydown", (event) => {
             if (event.key === "Enter") {
@@ -683,6 +720,7 @@ ${JSON.stringify(data, null, 2)}`;
             }
         });
 
+        updateWriteKeyHint();
         validateValueLength();
         getBucket();
     </script>

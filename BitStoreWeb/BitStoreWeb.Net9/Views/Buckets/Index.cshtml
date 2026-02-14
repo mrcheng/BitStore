@@ -45,8 +45,12 @@
 
 <div class="card mb-3 fade-in-up fade-delay-1">
     <div class="card-body">
-        <div class="table-responsive">
-            <table id="buckets-table" class="table table-striped align-middle w-100">
+        <div class="datatable-shell">
+            <table
+                id="buckets-table"
+                class="table table-striped align-middle w-100 nowrap"
+                data-source-url="@Url.Action("Data", "Buckets")"
+                data-bucket-url-template="@Url.Action("Index", "Bucket", new { id = "__id__" })">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -67,115 +71,4 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
-        (() => {
-            const tableElement = document.getElementById("buckets-table");
-            if (!tableElement || !window.DataTable) {
-                return;
-            }
-
-            const bucketUrlTemplate = '@Url.Action("Index", "Bucket", new { id = "__id__" })';
-
-            const escapeHtml = (value) => {
-                const div = document.createElement("div");
-                div.textContent = value ?? "";
-                return div.innerHTML;
-            };
-
-            new window.DataTable(tableElement, {
-                ajax: {
-                    url: '@Url.Action("Data", "Buckets")',
-                    dataSrc: "data"
-                },
-                autoWidth: false,
-                deferRender: true,
-                pageLength: 10,
-                lengthMenu: [10, 25, 50, 100],
-                order: [[5, "desc"]],
-                language: {
-                    emptyTable: "No buckets yet. Create your first bucket above.",
-                    search: "Search",
-                    searchPlaceholder: "Name, slug, or description"
-                },
-                columns: [
-                    {
-                        data: "name",
-                        render: (data, type) => {
-                            const value = data ?? "";
-                            if (type !== "display") {
-                                return value;
-                            }
-
-                            return `<span class="fw-semibold">${escapeHtml(value)}</span>`;
-                        }
-                    },
-                    {
-                        data: "description",
-                        defaultContent: "",
-                        render: (data, type) => {
-                            const value = data ?? "";
-                            if (type !== "display") {
-                                return value;
-                            }
-
-                            return value
-                                ? escapeHtml(value)
-                                : '<span class="text-muted">No description.</span>';
-                        }
-                    },
-                    {
-                        data: "slug",
-                        render: (data, type) => {
-                            const value = data ?? "";
-                            if (type !== "display") {
-                                return value;
-                            }
-
-                            return `<code>${escapeHtml(value)}</code>`;
-                        }
-                    },
-                    {
-                        data: "writeApiKey",
-                        render: (data, type) => {
-                            const value = data ?? "";
-                            if (type !== "display") {
-                                return value;
-                            }
-
-                            return `<code>${escapeHtml(value)}</code>`;
-                        }
-                    },
-                    { data: "recordCount" },
-                    {
-                        data: "updatedUtc",
-                        render: (data, type) => {
-                            const value = data ?? "";
-                            if (type !== "display") {
-                                return value;
-                            }
-
-                            const parsed = new Date(value);
-                            return Number.isNaN(parsed.getTime())
-                                ? escapeHtml(value)
-                                : escapeHtml(parsed.toLocaleString());
-                        }
-                    },
-                    {
-                        data: "id",
-                        orderable: false,
-                        searchable: false,
-                        className: "text-end",
-                        render: (data, type) => {
-                            if (type !== "display") {
-                                return data;
-                            }
-
-                            const href = bucketUrlTemplate.replace("__id__", encodeURIComponent(String(data)));
-                            return `<a href="${href}" class="btn btn-primary btn-sm">Open</a>`;
-                        }
-                    }
-                ]
-            });
-        })();
-    </script>
 }

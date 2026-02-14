@@ -175,9 +175,9 @@ public class BucketApiController : ControllerBase
             return NotFound(new { message = "Bucket not found." });
         }
 
-        if (!HasWriteAccess(bucket, apiKeyHeader, apiKey))
+        if (!HasWriteAccess(bucket, apiKeyHeader, apiKey, out var writeAccessError))
         {
-            return Unauthorized(new { message = "Write access requires X-BitStore-Key or owner session." });
+            return Unauthorized(new { message = writeAccessError });
         }
 
         var record = new BucketRecord
@@ -225,9 +225,9 @@ public class BucketApiController : ControllerBase
             return NotFound(new { message = "Bucket not found." });
         }
 
-        if (!HasWriteAccess(bucket, apiKeyHeader, apiKey))
+        if (!HasWriteAccess(bucket, apiKeyHeader, apiKey, out var writeAccessError))
         {
-            return Unauthorized(new { message = "Write access requires X-BitStore-Key or owner session." });
+            return Unauthorized(new { message = writeAccessError });
         }
 
         var record = await _db.BucketRecords
@@ -260,9 +260,9 @@ public class BucketApiController : ControllerBase
             return NotFound(new { message = "Bucket not found." });
         }
 
-        if (!HasWriteAccess(bucket, apiKeyHeader, apiKey))
+        if (!HasWriteAccess(bucket, apiKeyHeader, apiKey, out var writeAccessError))
         {
-            return Unauthorized(new { message = "Write access requires X-BitStore-Key or owner session." });
+            return Unauthorized(new { message = writeAccessError });
         }
 
         var record = await _db.BucketRecords
@@ -295,9 +295,9 @@ public class BucketApiController : ControllerBase
             return NotFound(new { message = "Bucket not found." });
         }
 
-        if (!HasWriteAccess(bucket, apiKeyHeader, apiKey))
+        if (!HasWriteAccess(bucket, apiKeyHeader, apiKey, out var writeAccessError))
         {
-            return Unauthorized(new { message = "Write access requires X-BitStore-Key or owner session." });
+            return Unauthorized(new { message = writeAccessError });
         }
 
         var record = await _db.BucketRecords
@@ -328,9 +328,9 @@ public class BucketApiController : ControllerBase
             return NotFound(new { message = "Bucket not found." });
         }
 
-        if (!HasWriteAccess(bucket, apiKeyHeader, apiKey))
+        if (!HasWriteAccess(bucket, apiKeyHeader, apiKey, out var writeAccessError))
         {
-            return Unauthorized(new { message = "Write access requires X-BitStore-Key or owner session." });
+            return Unauthorized(new { message = writeAccessError });
         }
 
         var records = await _db.BucketRecords
@@ -358,9 +358,9 @@ public class BucketApiController : ControllerBase
             return NotFound(new { message = "Bucket not found." });
         }
 
-        if (!HasWriteAccess(bucket, apiKeyHeader, apiKey))
+        if (!HasWriteAccess(bucket, apiKeyHeader, apiKey, out var writeAccessError))
         {
-            return Unauthorized(new { message = "Write access requires X-BitStore-Key or owner session." });
+            return Unauthorized(new { message = writeAccessError });
         }
 
         _db.Buckets.Remove(bucket);
@@ -369,19 +369,32 @@ public class BucketApiController : ControllerBase
         return NoContent();
     }
 
-    private bool HasWriteAccess(Bucket bucket, string? apiKeyHeader, string? apiKey)
+    private bool HasWriteAccess(Bucket bucket, string? apiKeyHeader, string? apiKey, out string errorMessage)
     {
         var providedApiKey = !string.IsNullOrWhiteSpace(apiKeyHeader)
-            ? apiKeyHeader
+            ? apiKeyHeader.Trim()
             : apiKey;
-        if (!string.IsNullOrWhiteSpace(providedApiKey) &&
-            string.Equals(bucket.WriteApiKey, providedApiKey.Trim(), StringComparison.Ordinal))
+        if (!string.IsNullOrWhiteSpace(providedApiKey))
         {
-            return true;
+            if (string.Equals(bucket.WriteApiKey, providedApiKey.Trim(), StringComparison.Ordinal))
+            {
+                errorMessage = string.Empty;
+                return true;
+            }
+
+            errorMessage = "Invalid write key for this bucket.";
+            return false;
         }
 
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return int.TryParse(userIdClaim, out var userId) && userId == bucket.OwnerUserId;
+        if (int.TryParse(userIdClaim, out var userId) && userId == bucket.OwnerUserId)
+        {
+            errorMessage = string.Empty;
+            return true;
+        }
+
+        errorMessage = "Write access requires X-BitStore-Key or owner session.";
+        return false;
     }
 
     private static BucketRecordResponse MapRecord(BucketRecord record)

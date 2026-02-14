@@ -64,12 +64,11 @@ a:hover {
 }
 
 .app-header {
-  padding: 0 1rem;
+  padding: 0 0.8rem;
 }
 
 .app-nav {
-  margin: 1rem auto 0;
-  max-width: 1120px;
+  margin: 0.8rem 0 0;
   border: 1px solid var(--line-soft);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.88);
@@ -77,8 +76,7 @@ a:hover {
   backdrop-filter: blur(8px);
 }
 
-.app-nav .container {
-  max-width: 100%;
+.app-nav .container-fluid {
   padding-inline: 0.95rem;
 }
 
@@ -123,6 +121,19 @@ a:hover {
   background: var(--brand-100);
 }
 
+.nav-link-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.nav-bucket-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  fill: currentColor;
+  opacity: 0.95;
+}
+
 .nav-hello {
   color: var(--ink-500) !important;
 }
@@ -136,8 +147,7 @@ a:hover {
 }
 
 .app-main-container {
-  max-width: 1120px;
-  padding: 1.15rem 1rem 1.9rem;
+  padding: 1.05rem 0.8rem 1.65rem;
 }
 
 .app-stage {
@@ -150,12 +160,12 @@ a:hover {
 }
 
 .app-footer {
-  margin: 0 auto 1rem;
-  width: min(1120px, calc(100% - 2rem));
+  margin: 0 0.8rem 0.9rem;
   border: 1px solid var(--line-soft);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.82);
   color: var(--ink-500);
+  padding-inline: 0.85rem;
 }
 
 .page-kicker {
@@ -444,6 +454,13 @@ code {
   background: #ffffff;
 }
 
+.datatable-shell {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: #ffffff;
+  padding: 0.35rem 0.55rem;
+}
+
 .dataTables_wrapper {
   color: var(--ink-700);
 }
@@ -489,6 +506,50 @@ code {
   background: var(--brand-700);
 }
 
+.dataTables_wrapper .dtr-details {
+  width: 100%;
+}
+
+.dataTables_wrapper .dtr-title {
+  color: var(--ink-700);
+}
+
+.dataTables_wrapper .dtr-data {
+  color: var(--ink-900);
+}
+
+.copy-key-btn {
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 1px solid #cad8e8;
+  border-radius: 6px;
+  background: #f3f8ff;
+  color: #375a7d;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  transition: background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+
+.copy-key-btn:hover {
+  background: #e8f1fb;
+  border-color: #b8cde3;
+}
+
+.copy-key-btn.copied {
+  background: #e8f8f5;
+  border-color: #b8eadf;
+  color: #0f766e;
+}
+
+.copy-key-icon {
+  width: 0.82rem;
+  height: 0.82rem;
+  fill: currentColor;
+}
+
 .text-muted {
   color: var(--ink-500) !important;
 }
@@ -518,7 +579,29 @@ code {
   }
 }
 
-@media (max-width: 991.98px) {
+@media (min-width: 768px) {
+  .app-header,
+  .app-main-container {
+    padding-inline: 1.5rem;
+  }
+
+  .app-footer {
+    margin-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .app-header,
+  .app-main-container {
+    padding-inline: 3rem;
+  }
+
+  .app-footer {
+    margin-inline: 3rem;
+  }
+}
+
+@media (max-width: 767.98px) {
   .app-nav {
     margin-top: 0.75rem;
     border-radius: 14px;
@@ -526,7 +609,11 @@ code {
 
   .app-header,
   .app-main-container {
-    padding-inline: 0.8rem;
+    padding-inline: 0.5rem;
+  }
+
+  .app-footer {
+    margin-inline: 0.5rem;
   }
 
   .hero-title {
