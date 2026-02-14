@@ -1,18 +1,29 @@
 # BitStore
 
-BitStore helps teams ship tiny but critical data flows fast.  
-Create a bucket, publish short values, read them anywhere, and control writes with a key.
+Store a value in a bit.
 
-## Why Teams Choose BitStore
+BitStore is a lightweight bucket API + web app for teams that need to publish and read tiny values fast.
+Instead of building ad-hoc key/value plumbing, you get a ready-to-run product with auth, UI, Swagger docs, and demo client out of the box.
 
-- Go live fast: bucket + API in minutes, not days.
-- Simple integration: clean HTTP endpoints for apps, scripts, CI, and devices.
-- Practical control: public reads by slug, protected writes by `X-BitStore-Key`.
-- Built-in operator UX: modern bucket management UI, Swagger docs, and demo client.
+## The Value
 
-## Product + Tutorial (Merged)
+- Ship faster: create a bucket and start writing/reading in minutes.
+- Integrate anywhere: use plain HTTP from apps, scripts, CI, cron jobs, and devices.
+- Keep control simple: read by slug, write with `X-BitStore-Key`.
+- Operate easily: manage buckets in UI, inspect API in Swagger, test in `/demo`.
 
-### 1. Run locally
+## What You Get Right Now
+
+- ASP.NET Core MVC app (`.NET 9`) at `BitStoreWeb.Net9`
+- Bucket management UI (`/Buckets`)
+- Tutorial page (`/HowTo`)
+- Swagger API docs (`/api` -> `/swagger`)
+- Logged-out demo client (`/demo`)
+- SQLite persistence out of the box
+
+## 2-Minute Quick Start
+
+### 1) Run locally
 
 ```powershell
 npm --prefix BitStoreWeb.Net9 install
@@ -24,27 +35,26 @@ Open:
 
 - App: `https://localhost:7001/`
 - Buckets: `https://localhost:7001/Buckets`
-- Tutorial page: `https://localhost:7001/HowTo`
-- API docs: `https://localhost:7001/api` (redirects to `/swagger`)
+- Tutorial: `https://localhost:7001/HowTo`
+- API docs: `https://localhost:7001/api`
 - Demo client: `https://localhost:7001/demo`
-- Demo client uses logged-out requests (`credentials: "omit"`), even if you are signed in.
 
-### 2. Create your first bucket
+Note: `/demo` intentionally runs requests in logged-out mode (`credentials: "omit"`).
 
-1. Login at `https://localhost:7001/Account/Login`
+### 2) Create your first bucket
+
+1. Login: `https://localhost:7001/Account/Login`
 2. Create a bucket in `/Buckets`
-3. Copy:
-   - `slug` (public identifier)
-   - `write key` (secret token)
+3. Copy `slug` (public identifier) and `write key` (secret token).
 
-### 3. Read from anywhere
+### 3) Read data
 
 ```bash
 curl "https://localhost:7001/api/buckets/your-slug"
 curl "https://localhost:7001/api/buckets/your-slug/latest"
 ```
 
-### 4. Write with key protection
+### 4) Write data
 
 ```bash
 curl -X POST "https://localhost:7001/api/buckets/your-slug/records" \
@@ -55,26 +65,28 @@ curl -X POST "https://localhost:7001/api/buckets/your-slug/records" \
 
 ## API Snapshot
 
-- `GET /api/buckets/{slug}`
-- `GET /api/buckets/{slug}/latest`
-- `GET /api/buckets/{slug}/records?take=50`
-- `POST /api/buckets/{slug}/records`
-- `PUT /api/buckets/{slug}/records/{recordId}`
-- `POST /api/buckets/{slug}/records/{recordId}/clear`
-- `DELETE /api/buckets/{slug}/records/{recordId}`
-- `DELETE /api/buckets/{slug}/records`
-- `DELETE /api/buckets/{slug}`
+| Method | Route |
+|---|---|
+| GET | `/api/buckets/{slug}` |
+| GET | `/api/buckets/{slug}/latest` |
+| GET | `/api/buckets/{slug}/records?take=50` |
+| POST | `/api/buckets/{slug}/records` |
+| PUT | `/api/buckets/{slug}/records/{recordId}` |
+| POST | `/api/buckets/{slug}/records/{recordId}/clear` |
+| DELETE | `/api/buckets/{slug}/records/{recordId}` |
+| DELETE | `/api/buckets/{slug}/records` |
+| DELETE | `/api/buckets/{slug}` |
 
-## Limits And Security
+## Product Guardrails
 
-- Max value length per record: **8 characters**
+- Max record value length: **8 characters**
 - Reads are public if slug is known
 - Writes require valid key or owner session
 - Use HTTPS in all environments
-- Keep write keys out of shipped frontend code when possible
+- Keep write keys out of shipped frontend code
 - Prefer backend proxying for browser write flows
 
-## JavaScript Pattern (Safe + Clear Errors)
+## Browser Integration Pattern (Recommended)
 
 ```javascript
 const MAX_VALUE_LENGTH = 8;
@@ -117,7 +129,7 @@ const latestPayload = await fetchJson(`${base}/latest`);
 console.log(latestPayload.record);
 ```
 
-`/your-backend/bitstore/write` is a placeholder pattern. Create that backend endpoint in your own app.
+`/your-backend/bitstore/write` is a placeholder route pattern. Create it in your own backend.
 
 ## Build
 
@@ -134,3 +146,8 @@ dotnet build BitStoreWeb.Net9/BitStoreWeb.Net9.csproj
 - Frontend source: `BitStoreWeb.Net9/frontend`
 - Bundled output: `BitStoreWeb.Net9/wwwroot/dist`
 - Startup: `BitStoreWeb.Net9/Program.cs`
+
+## Commercial Positioning
+
+BitStore is for teams that want results without platform overhead.
+If your product needs a simple, reliable place to share tiny values across systems, BitStore gives you a fast path from idea to production.
