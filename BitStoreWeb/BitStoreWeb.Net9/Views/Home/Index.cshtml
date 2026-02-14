@@ -90,5 +90,5 @@
 <span class="tok-keyword">await</span> <span class="tok-func">addValue</span>(<span class="tok-string">"1337"</span>);
 <span class="tok-keyword">const</span> <span class="tok-var">latestPayload</span> <span class="tok-operator">=</span> <span class="tok-keyword">await</span> <span class="tok-func">fetchJson</span>(<span class="tok-string">`${base}/latest`</span>);
 <span class="tok-func">console.log</span>(<span class="tok-var">latestPayload</span>.<span class="tok-key">record</span>);</code></pre>
-    <p class="small text-muted mt-2 mb-0">For browser apps, send writes through your backend proxy so the write key stays server-side.</p>
+    <p class="small text-muted mt-2 mb-0">For browser apps, send writes through your backend proxy so the write key stays server-side. <code>/your-backend/bitstore/write</code> is a placeholder route, not a built-in endpoint.</p>
 </section>
