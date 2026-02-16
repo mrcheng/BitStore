@@ -1,25 +1,29 @@
 using System.Security.Claims;
+using BitStoreWeb.Net9.Data;
 using BitStoreWeb.Net9.Models;
 using BitStoreWeb.Net9.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BitStoreWeb.Net9.Controllers;
 
 public class AccountController : Controller
 {
     private readonly IUserAuthService _userAuthService;
+    private readonly AppDbContext _db;
 
-    public AccountController(IUserAuthService userAuthService)
+    public AccountController(IUserAuthService userAuthService, AppDbContext db)
     {
         _userAuthService = userAuthService;
+        _db = db;
     }
 
     [AllowAnonymous]
     [HttpGet]
-    public IActionResult Login(string? returnUrl = null)
+    public async Task<IActionResult> Login(string? returnUrl = null)
     {
         if (User.Identity?.IsAuthenticated == true)
         {
@@ -27,6 +31,7 @@ public class AccountController : Controller
         }
 
         ViewData["ReturnUrl"] = returnUrl;
+        ViewData["ShowBootstrapHint"] = !await _db.Users.AnyAsync();
         return View(new LoginViewModel());
     }
 
@@ -36,6 +41,7 @@ public class AccountController : Controller
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
+        ViewData["ShowBootstrapHint"] = !await _db.Users.AnyAsync();
 
         if (!ModelState.IsValid)
         {
