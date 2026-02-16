@@ -41,4 +41,29 @@ public class UsersController : Controller
 
         return View(model);
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    {
+        var user = await _db.Users
+            .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (user is null)
+        {
+            TempData["ErrorMessage"] = "User not found.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (string.Equals(user.Role, Roles.SuperUser, StringComparison.OrdinalIgnoreCase))
+        {
+            TempData["ErrorMessage"] = "SuperUser accounts cannot be deleted.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        _db.Users.Remove(user);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        TempData["StatusMessage"] = $"User '{user.UserName}' was deleted.";
+        return RedirectToAction(nameof(Index));
+    }
 }
