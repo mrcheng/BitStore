@@ -19,13 +19,13 @@ jobs:
         with:
           node-version: "20"
           cache: npm
-          cache-dependency-path: BitStoreWeb.Net9/package-lock.json
+          cache-dependency-path: BitStoreWeb/BitStoreWeb.Net9/package-lock.json
 
       - name: Install frontend dependencies
-        run: npm ci --prefix BitStoreWeb.Net9
+        run: npm ci --prefix BitStoreWeb/BitStoreWeb.Net9
 
       - name: Build frontend assets
-        run: npm --prefix BitStoreWeb.Net9 run build
+        run: npm --prefix BitStoreWeb/BitStoreWeb.Net9 run build
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
@@ -33,7 +33,7 @@ jobs:
           dotnet-version: "9.0.x"
 
       - name: Restore .NET dependencies
-        run: dotnet restore BitStoreWeb.Net9/BitStoreWeb.Net9.csproj
+        run: dotnet restore BitStoreWeb/BitStoreWeb.Net9/BitStoreWeb.Net9.csproj
 
       - name: Build .NET app
-        run: dotnet build BitStoreWeb.Net9/BitStoreWeb.Net9.csproj --configuration Release --no-restore
+        run: dotnet build BitStoreWeb/BitStoreWeb.Net9/BitStoreWeb.Net9.csproj --configuration Release --no-restore
