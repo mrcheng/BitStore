@@ -2,14 +2,12 @@ using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using BitStoreWeb.Net9.Data;
 using BitStoreWeb.Net9.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace BitStoreWeb.Net9.Controllers;
 
 [ApiController]
-[Authorize]
 [Route("api/buckets")]
 public class BucketApiController : ControllerBase
 {

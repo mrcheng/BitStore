@@ -39,7 +39,7 @@ Open:
 - API docs: `https://localhost:7001/api`
 - Demo client: `https://localhost:7001/demo`
 
-Note: API and Swagger now require login, so `/demo` requests in logged-out mode will be unauthorized unless you adjust that behavior.
+Note: Swagger UI (`/api` -> `/swagger`) requires login. The `/demo` page intentionally runs requests in logged-out mode (`credentials: "omit"`).
 
 ### 2) Create your first bucket
 
@@ -80,8 +80,8 @@ curl -X POST "https://localhost:7001/api/buckets/your-slug/records" \
 ## Product Guardrails
 
 - Max record value length: **8 characters**
-- API and Swagger require authenticated session
-- Reads require authenticated session and known slug
+- Swagger UI requires authenticated session
+- Reads are public if slug is known
 - Writes require valid key or owner session
 - Use HTTPS in all environments
 - Keep write keys out of shipped frontend code

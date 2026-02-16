@@ -12,8 +12,8 @@
 <div class="alert alert-warning mb-3 fade-in-up fade-delay-1">
     <div class="fw-semibold mb-2">Visibility and security</div>
     <ul class="mb-0">
-        <li>API and Swagger require login. Unauthenticated requests are blocked.</li>
-        <li>Read endpoints are available after login if slug is known.</li>
+        <li>Swagger UI requires login.</li>
+        <li>Read endpoints are public by slug. If someone knows your slug, they can fetch bucket data.</li>
         <li>Write endpoints require <code>X-BitStore-Key</code> (or an owner session).</li>
         <li>Treat the write key as secret. Do not put it in public repos or frontend code shipped to browsers.</li>
         <li>Always check HTTP status and surface API error messages from the response body.</li>
