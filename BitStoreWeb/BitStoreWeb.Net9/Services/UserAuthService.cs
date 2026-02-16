@@ -25,7 +25,7 @@ public class UserAuthService : IUserAuthService
             return new LoginResult
             {
                 Succeeded = false,
-                ErrorMessage = "Username and password are required."
+                ErrorMessage = "Email and password are required."
             };
         }
 
@@ -40,7 +40,7 @@ public class UserAuthService : IUserAuthService
                 return new LoginResult
                 {
                     Succeeded = false,
-                    ErrorMessage = "Invalid username or password."
+                    ErrorMessage = "Invalid email or password."
                 };
             }
 
@@ -74,19 +74,11 @@ public class UserAuthService : IUserAuthService
         }
 
         var hasUsers = await _db.Users.AnyAsync();
-        if (hasUsers)
-        {
-            return new LoginResult
-            {
-                Succeeded = false,
-                ErrorMessage = "Invalid username or password."
-            };
-        }
 
         var firstUser = new AppUser
         {
             UserName = normalizedUserName,
-            Role = Roles.SuperUser,
+            Role = hasUsers ? Roles.User : Roles.SuperUser,
             CreatedUtc = DateTime.UtcNow
         };
         firstUser.PasswordHash = _passwordHasher.HashPassword(firstUser, password);
