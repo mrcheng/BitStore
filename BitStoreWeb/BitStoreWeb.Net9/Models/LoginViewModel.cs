@@ -5,7 +5,7 @@ namespace BitStoreWeb.Net9.Models;
 public class LoginViewModel
 {
     [Required]
-    [Display(Name = "Username")]
+    [Display(Name = "Username (your email)")]
     public string UserName { get; set; } = string.Empty;
 
     [Required]
