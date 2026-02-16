@@ -120,7 +120,6 @@ app.MapStaticAssets();
 app.MapControllers();
 app.MapGet("/api", () => Results.Redirect("/swagger", permanent: false))
     .RequireAuthorization();
-app.MapGet("/demo", () => Results.Redirect("/demo/index.html", permanent: false));
 
 app.MapControllerRoute(
     name: "default",

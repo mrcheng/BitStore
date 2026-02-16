@@ -1,0 +1,427 @@
+@{
+    ViewData["Title"] = "Demo";
+}
+
+<style>
+    .demo-output {
+        margin: 0;
+        min-height: 125px;
+        border: 1px solid #d7e3f1;
+        border-radius: 12px;
+        background: #f8fbff;
+        color: #143152;
+        padding: 12px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: "IBM Plex Mono", "Cascadia Mono", "Consolas", monospace;
+    }
+
+    .demo-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--ink-700);
+        font-size: 0.9rem;
+    }
+
+    .demo-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #64748b;
+    }
+
+    .demo-status[data-state="loading"] .demo-dot {
+        background: var(--warn-text);
+    }
+
+    .demo-status[data-state="ok"] .demo-dot {
+        background: var(--ok-text);
+    }
+
+    .demo-status[data-state="error"] .demo-dot {
+        background: var(--danger-text);
+    }
+</style>
+
+<section class="hero-surface fade-in-up">
+    <span class="page-kicker">Demo Client</span>
+    <h1 class="hero-title">Test BitStore Reads And Writes</h1>
+    <p class="hero-subtitle mb-0">
+        This demo now runs inside the main app layout, so it uses the same header/menu as the rest of BitStore.
+    </p>
+</section>
+
+<section class="mt-4">
+    <div class="card fade-in-up fade-delay-1">
+        <div class="card-body">
+            <h2 class="section-title h4 mb-2">Connection</h2>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="baseUrlInput" class="form-label">Base URL</label>
+                    <input id="baseUrlInput" type="text" class="form-control" placeholder="https://localhost:7001">
+                </div>
+                <div class="col-md-6">
+                    <label for="slugInput" class="form-label">Bucket Slug</label>
+                    <input id="slugInput" type="text" class="form-control" value="testbucket-1" placeholder="your-bucket-slug">
+                </div>
+            </div>
+            <p class="small text-muted mt-2 mb-0" id="endpointPreview">Endpoint: -</p>
+        </div>
+    </div>
+</section>
+
+<section class="row g-3 mt-1">
+    <div class="col-lg-6">
+        <div class="card h-100 fade-in-up fade-delay-2">
+            <div class="card-body">
+                <h2 class="section-title h4 mb-2">1. Read Bucket (GET)</h2>
+                <p class="text-muted mb-3">Fetches <code>/api/buckets/{slug}</code> and shows summary + latest value.</p>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <button class="btn btn-primary" id="getButton" type="button">Get Bucket</button>
+                    <button class="btn btn-outline-primary" id="copyReadCurlButton" type="button">Copy GET curl</button>
+                </div>
+                <pre id="getOutput" class="demo-output">No data yet.</pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card h-100 fade-in-up fade-delay-3">
+            <div class="card-body">
+                <h2 class="section-title h4 mb-2">2. Add Value (POST)</h2>
+                <p class="text-muted mb-3">Sends <code>POST /api/buckets/{slug}/records</code> with <code>X-BitStore-Key</code>.</p>
+                <div class="mb-3">
+                    <label for="writeKeyInput" class="form-label">Write Key (secret)</label>
+                    <input id="writeKeyInput" type="password" class="form-control" placeholder="paste write key">
+                    <p class="small text-muted mt-2 mb-0" id="writeKeyHint">Paste the raw key token (48 chars). If you paste <code>X-BitStore-Key: ...</code>, it will be cleaned automatically.</p>
+                </div>
+                <div class="mb-3">
+                    <label for="valueInput" class="form-label">Value</label>
+                    <textarea id="valueInput" class="form-control" rows="4" placeholder="new value"></textarea>
+                    <p class="small text-muted mt-2 mb-0" id="valueWarning">Value max length: 8 characters.</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <button class="btn btn-primary" id="postButton" type="button">Post Value</button>
+                    <button class="btn btn-outline-primary" id="copyWriteCurlButton" type="button">Copy POST curl</button>
+                </div>
+                <pre id="postOutput" class="demo-output">No write attempt yet.</pre>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mt-3">
+    <div class="demo-status fade-in-up fade-delay-3" id="status" data-state="ready">
+        <span class="demo-dot"></span>
+        <span id="statusText">Ready.</span>
+    </div>
+</section>
+
+<section class="mt-4">
+    <h2 class="section-title mb-2">3. Minimal HTML Example</h2>
+    <p class="section-subtitle mb-3">This will loop your array in bucket <code>main</code>. Change <code>main</code> to your slug, like <code>yourslug</code>.</p>
+    <pre class="code-sample mb-0"><code class="language-html">&lt;!doctype html&gt;
+&lt;html lang="en"&gt;
+  &lt;body&gt;
+    &lt;script&gt;
+      fetch("https://bitstorehome.azurewebsites.net/api/buckets/main/records", {
+        headers: {
+          "X-BitStore-Key": "your key"
+        }
+      })
+        .then((r) =&gt; r.json())
+        .then((d) =&gt; {
+          const values = Array.isArray(d.records) ? d.records.map((x) =&gt; x.value) : [];
+          document.body.textContent = values.join("\n");
+        });
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+</section>
+
+@section Scripts {
+    <script>
+        const baseUrlInput = document.getElementById("baseUrlInput");
+        const slugInput = document.getElementById("slugInput");
+        const writeKeyInput = document.getElementById("writeKeyInput");
+        const valueInput = document.getElementById("valueInput");
+        const getButton = document.getElementById("getButton");
+        const postButton = document.getElementById("postButton");
+        const copyReadCurlButton = document.getElementById("copyReadCurlButton");
+        const copyWriteCurlButton = document.getElementById("copyWriteCurlButton");
+        const getOutput = document.getElementById("getOutput");
+        const postOutput = document.getElementById("postOutput");
+        const endpointPreview = document.getElementById("endpointPreview");
+        const writeKeyHint = document.getElementById("writeKeyHint");
+        const valueWarning = document.getElementById("valueWarning");
+        const status = document.getElementById("status");
+        const statusText = document.getElementById("statusText");
+        const maxValueLength = 8;
+
+        function defaultBaseUrl() {
+            return window.location.origin && window.location.origin.startsWith("http")
+                ? window.location.origin
+                : "https://localhost:7001";
+        }
+
+        function normalizeBaseUrl(baseUrl) {
+            const value = (baseUrl || "").trim().replace(/\/+$/, "");
+            if (!value) {
+                return defaultBaseUrl();
+            }
+
+            return value;
+        }
+
+        function readSlug() {
+            const slug = (slugInput.value || "").trim();
+            if (!slug) {
+                throw new Error("Bucket slug is required.");
+            }
+
+            return slug;
+        }
+
+        function buildBucketUrl() {
+            const baseUrl = normalizeBaseUrl(baseUrlInput.value);
+            const slug = encodeURIComponent(readSlug());
+            return `${baseUrl}/api/buckets/${slug}`;
+        }
+
+        function setStatus(text, state) {
+            status.dataset.state = state;
+            statusText.textContent = text;
+        }
+
+        function setEndpointPreview() {
+            const baseUrl = normalizeBaseUrl(baseUrlInput.value);
+            const slug = (slugInput.value || "").trim() || "your-slug";
+            endpointPreview.textContent = `Endpoint: ${baseUrl}/api/buckets/${slug}`;
+        }
+
+        function safeParseJson(text) {
+            if (!text) {
+                return {};
+            }
+
+            try {
+                return JSON.parse(text);
+            } catch {
+                return { raw: text };
+            }
+        }
+
+        function extractApiErrorMessage(data, fallback) {
+            if (data && typeof data === "object") {
+                if (data.errors && typeof data.errors === "object") {
+                    for (const key of Object.keys(data.errors)) {
+                        const messages = data.errors[key];
+                        if (Array.isArray(messages) && messages.length > 0) {
+                            return messages[0];
+                        }
+                    }
+                }
+
+                if (typeof data.message === "string" && data.message.trim()) {
+                    return data.message;
+                }
+
+                if (typeof data.title === "string" && data.title.trim()) {
+                    return data.title;
+                }
+            }
+
+            return fallback;
+        }
+
+        function validateValueLength() {
+            const length = (valueInput.value || "").length;
+            if (length > maxValueLength) {
+                valueWarning.textContent = `Too long: ${length}/${maxValueLength}. Use ${maxValueLength} characters or fewer.`;
+                valueWarning.classList.remove("text-muted");
+                valueWarning.classList.add("text-danger");
+                valueInput.style.borderColor = "var(--danger-text)";
+                return false;
+            }
+
+            valueWarning.textContent = `Value max length: ${maxValueLength} characters. Current: ${length}.`;
+            valueWarning.classList.remove("text-danger");
+            valueWarning.classList.add("text-muted");
+            valueInput.style.borderColor = "";
+            return true;
+        }
+
+        function updateQueryParams() {
+            const url = new URL(window.location.href);
+            url.searchParams.set("base", normalizeBaseUrl(baseUrlInput.value));
+            url.searchParams.set("slug", (slugInput.value || "").trim());
+            window.history.replaceState({}, "", url.toString());
+        }
+
+        async function copyTextToClipboard(text, okMessage) {
+            try {
+                await navigator.clipboard.writeText(text);
+                setStatus(okMessage, "ok");
+            } catch {
+                setStatus("Clipboard copy failed.", "error");
+            }
+        }
+
+        function buildReadCurl() {
+            return `curl "${buildBucketUrl()}"`;
+        }
+
+        function buildWriteCurl() {
+            const baseUrl = normalizeBaseUrl(baseUrlInput.value);
+            const slug = encodeURIComponent(readSlug());
+            const writeKey = "$BITSTORE_WRITE_KEY";
+            const value = (valueInput.value || "new value").trim();
+            return `curl -X POST "${baseUrl}/api/buckets/${slug}/records" -H "Content-Type: application/json" -H "X-BitStore-Key: ${writeKey}" -d "{\\"value\\":\\"${value}\\"}"`;
+        }
+
+        function normalizeWriteKey(inputValue) {
+            const raw = (inputValue || "").trim();
+            if (!raw) {
+                return "";
+            }
+
+            const match = raw.match(/^x-bitstore-key\s*:\s*(.+)$/i);
+            return (match ? match[1] : raw).trim();
+        }
+
+        function updateWriteKeyHint() {
+            const raw = (writeKeyInput.value || "").trim();
+            const normalized = normalizeWriteKey(raw);
+            const looksLikeHeader = /^x-bitstore-key\s*:/i.test(raw);
+            if (looksLikeHeader) {
+                writeKeyHint.textContent = "Header prefix detected. Using token after ':'.";
+                writeKeyHint.classList.remove("text-muted");
+                writeKeyHint.classList.add("text-warning");
+                return;
+            }
+
+            if (!normalized) {
+                writeKeyHint.textContent = "Paste the raw key token (48 chars).";
+                writeKeyHint.classList.remove("text-warning");
+                writeKeyHint.classList.add("text-muted");
+                return;
+            }
+
+            writeKeyHint.textContent = `Write key length: ${normalized.length} characters.`;
+            writeKeyHint.classList.remove("text-warning");
+            writeKeyHint.classList.add("text-muted");
+        }
+
+        async function getBucket() {
+            try {
+                setStatus("Loading bucket...", "loading");
+                const response = await fetch(buildBucketUrl(), {
+                    headers: { "Accept": "application/json" },
+                    credentials: "omit"
+                });
+                const text = await response.text();
+                const data = safeParseJson(text);
+                if (!response.ok) {
+                    throw new Error(extractApiErrorMessage(data, `HTTP ${response.status} ${response.statusText}`));
+                }
+
+                const bucket = data.bucket || {};
+                const latest = data.latestRecord || {};
+                getOutput.textContent =
+`Bucket name: ${bucket.name || ""}
+Description: ${bucket.description || ""}
+Slug: ${bucket.slug || ""}
+Record count: ${bucket.recordCount || 0}
+Latest value: ${latest.value ?? "(none)"}
+Latest updated: ${latest.updatedUtc || "(n/a)"}
+
+Raw response:
+${JSON.stringify(data, null, 2)}`;
+
+                updateQueryParams();
+                setStatus("Bucket loaded.", "ok");
+            } catch (error) {
+                getOutput.textContent = `Read failed: ${error.message}`;
+                setStatus("Read failed.", "error");
+            }
+        }
+
+        async function postValue() {
+            try {
+                const writeKey = normalizeWriteKey(writeKeyInput.value);
+                const value = (valueInput.value || "").trim();
+                if (!writeKey) {
+                    throw new Error("Write key is required.");
+                }
+
+                if (!value) {
+                    throw new Error("Value is required.");
+                }
+
+                if (!validateValueLength()) {
+                    throw new Error(`Value must be ${maxValueLength} characters or fewer.`);
+                }
+
+                const baseUrl = normalizeBaseUrl(baseUrlInput.value);
+                const slug = encodeURIComponent(readSlug());
+                setStatus("Posting value...", "loading");
+
+                const response = await fetch(`${baseUrl}/api/buckets/${slug}/records`, {
+                    method: "POST",
+                    credentials: "omit",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-BitStore-Key": writeKey
+                    },
+                    body: JSON.stringify({ value })
+                });
+
+                const text = await response.text();
+                const data = safeParseJson(text);
+                if (!response.ok) {
+                    throw new Error(extractApiErrorMessage(data, `HTTP ${response.status} ${response.statusText}`));
+                }
+
+                postOutput.textContent = `Write successful.\n\n${JSON.stringify(data, null, 2)}`;
+                updateQueryParams();
+                setStatus("Value posted.", "ok");
+                writeKeyHint.textContent = `Write key length: ${writeKey.length} characters.`;
+                writeKeyHint.classList.remove("text-warning");
+                writeKeyHint.classList.add("text-muted");
+                await getBucket();
+            } catch (error) {
+                postOutput.textContent = `Write failed: ${error.message}`;
+                setStatus("Write failed.", "error");
+            }
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        baseUrlInput.value = params.get("base") || defaultBaseUrl();
+        if (params.get("slug")) {
+            slugInput.value = params.get("slug");
+        }
+
+        setEndpointPreview();
+
+        getButton.addEventListener("click", getBucket);
+        postButton.addEventListener("click", postValue);
+        copyReadCurlButton.addEventListener("click", () => copyTextToClipboard(buildReadCurl(), "GET curl copied."));
+        copyWriteCurlButton.addEventListener("click", () => copyTextToClipboard(buildWriteCurl(), "POST curl copied."));
+
+        baseUrlInput.addEventListener("input", setEndpointPreview);
+        slugInput.addEventListener("input", setEndpointPreview);
+        writeKeyInput.addEventListener("input", updateWriteKeyHint);
+        valueInput.addEventListener("input", validateValueLength);
+        slugInput.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                getBucket();
+            }
+        });
+
+        updateWriteKeyHint();
+        validateValueLength();
+        getBucket();
+    </script>
+}
