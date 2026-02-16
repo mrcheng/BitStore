@@ -1,3 +1,5 @@
 node_modules/
 wwwroot/dist/
 bitstore.db
+bitstore.db-shm
+bitstore.db-wal
