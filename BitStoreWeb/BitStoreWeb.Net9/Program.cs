@@ -25,7 +25,15 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     if (string.Equals(databaseProvider, "SqlServer", StringComparison.OrdinalIgnoreCase))
     {
-        options.UseSqlServer(connectionString);
+        options.UseSqlServer(
+            connectionString,
+            sqlServerOptions =>
+            {
+                sqlServerOptions.EnableRetryOnFailure(
+                    maxRetryCount: 10,
+                    maxRetryDelay: TimeSpan.FromSeconds(30),
+                    errorNumbersToAdd: null);
+            });
     }
     else
     {
