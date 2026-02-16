@@ -1,8 +1,10 @@
 @model BitStoreWeb.Net9.Models.LoginViewModel
 @{
-    ViewData["Title"] = "Login";
     var returnUrl = ViewData["ReturnUrl"] as string;
     var showBootstrapHint = ViewData["ShowBootstrapHint"] as bool? == true;
+    var authMode = ViewData["AuthMode"] as string ?? "login";
+    var isRegisterMode = string.Equals(authMode, "register", StringComparison.OrdinalIgnoreCase);
+    ViewData["Title"] = isRegisterMode ? "Create account" : "Login";
 }
 
 <div class="row justify-content-center">
@@ -10,11 +12,32 @@
         <div class="card shadow-sm fade-in-up">
             <div class="card-body p-4">
                 <span class="page-kicker mb-3">Account Access</span>
-                <h1 class="h4 mb-3">Login</h1>
-                <p class="text-muted mb-4">Sign in to access buckets, API docs, and management pages.</p>
-                <p class="small text-muted mb-4">Just enter your email and password to create an account.</p>
+                <h1 class="h4 mb-2">@(isRegisterMode ? "Create account" : "Login")</h1>
+                <p class="text-muted mb-2">
+                    @(isRegisterMode
+                        ? "Create a new account with your email and password."
+                        : "Sign in to access buckets, API docs, and management pages.")
+                </p>
+                <p class="small text-muted mb-4">
+                    @(isRegisterMode
+                        ? "After account creation, you'll be signed in automatically."
+                        : "No account yet? Use Create account.")
+                </p>
 
-                <form asp-action="Login" asp-controller="Account" asp-route-returnUrl="@returnUrl" method="post" novalidate>
+                <div class="btn-group w-100 mb-4" role="group" aria-label="Account mode">
+                    <a class="btn @(isRegisterMode ? "btn-outline-primary" : "btn-primary")"
+                       asp-action="Login"
+                       asp-controller="Account"
+                       asp-route-returnUrl="@returnUrl"
+                       asp-route-mode="login">Login</a>
+                    <a class="btn @(isRegisterMode ? "btn-primary" : "btn-outline-primary")"
+                       asp-action="Login"
+                       asp-controller="Account"
+                       asp-route-returnUrl="@returnUrl"
+                       asp-route-mode="register">Create account</a>
+                </div>
+
+                <form asp-action="Login" asp-controller="Account" asp-route-returnUrl="@returnUrl" asp-route-mode="@authMode" method="post" novalidate>
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                     <div class="mb-3">
@@ -34,15 +57,24 @@
                         <label asp-for="RememberMe" class="form-check-label"></label>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100">Sign in</button>
+                    <button type="submit" class="btn btn-primary w-100">@(isRegisterMode ? "Create account" : "Sign in")</button>
                 </form>
 
                 @if (showBootstrapHint)
                 {
                     <hr />
-                    <p class="small text-muted mb-0">
-                        First login creates the first account as <code>SuperUser</code>.
-                    </p>
+                    if (isRegisterMode)
+                    {
+                        <p class="small text-muted mb-0">
+                            First account becomes <code>SuperUser</code>.
+                        </p>
+                    }
+                    else
+                    {
+                        <p class="small text-muted mb-0">
+                            No account exists yet. Click <strong>Create account</strong> first.
+                        </p>
+                    }
                 }
             </div>
         </div>

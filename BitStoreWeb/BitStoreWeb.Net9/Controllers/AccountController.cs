@@ -12,6 +12,9 @@ namespace BitStoreWeb.Net9.Controllers;
 
 public class AccountController : Controller
 {
+    private const string LoginMode = "login";
+    private const string RegisterMode = "register";
+
     private readonly IUserAuthService _userAuthService;
     private readonly AppDbContext _db;
 
@@ -23,14 +26,16 @@ public class AccountController : Controller
 
     [AllowAnonymous]
     [HttpGet]
-    public async Task<IActionResult> Login(string? returnUrl = null)
+    public async Task<IActionResult> Login(string? returnUrl = null, string? mode = null)
     {
         if (User.Identity?.IsAuthenticated == true)
         {
             return RedirectToLocal(returnUrl);
         }
 
+        var authMode = NormalizeAuthMode(mode);
         ViewData["ReturnUrl"] = returnUrl;
+        ViewData["AuthMode"] = authMode;
         ViewData["ShowBootstrapHint"] = !await _db.Users.AnyAsync();
         return View(new LoginViewModel());
     }
@@ -38,9 +43,11 @@ public class AccountController : Controller
     [AllowAnonymous]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
+    public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null, string? mode = null)
     {
+        var authMode = NormalizeAuthMode(mode);
         ViewData["ReturnUrl"] = returnUrl;
+        ViewData["AuthMode"] = authMode;
         ViewData["ShowBootstrapHint"] = !await _db.Users.AnyAsync();
 
         if (!ModelState.IsValid)
@@ -48,10 +55,14 @@ public class AccountController : Controller
             return View(model);
         }
 
-        var loginResult = await _userAuthService.LoginOrBootstrapAsync(model.UserName, model.Password);
+        var loginResult = authMode == RegisterMode
+            ? await _userAuthService.RegisterAsync(model.UserName, model.Password)
+            : await _userAuthService.LoginAsync(model.UserName, model.Password);
         if (!loginResult.Succeeded || loginResult.User is null)
         {
-            ModelState.AddModelError(string.Empty, loginResult.ErrorMessage ?? "Login failed.");
+            ModelState.AddModelError(
+                string.Empty,
+                loginResult.ErrorMessage ?? (authMode == RegisterMode ? "Account creation failed." : "Login failed."));
             return View(model);
         }
 
@@ -97,5 +108,12 @@ public class AccountController : Controller
         }
 
         return RedirectToAction("Index", "Home");
+    }
+
+    private static string NormalizeAuthMode(string? mode)
+    {
+        return string.Equals(mode, RegisterMode, StringComparison.OrdinalIgnoreCase)
+            ? RegisterMode
+            : LoginMode;
     }
 }

@@ -4,5 +4,7 @@ namespace BitStoreWeb.Net9.Services;
 
 public interface IUserAuthService
 {
-    Task<LoginResult> LoginOrBootstrapAsync(string userName, string password);
+    Task<LoginResult> LoginAsync(string userName, string password);
+
+    Task<LoginResult> RegisterAsync(string userName, string password);
 }

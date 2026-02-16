@@ -16,7 +16,7 @@ public class UserAuthService : IUserAuthService
         _passwordHasher = passwordHasher;
     }
 
-    public async Task<LoginResult> LoginOrBootstrapAsync(string userName, string password)
+    public async Task<LoginResult> LoginAsync(string userName, string password)
     {
         var normalizedUserName = userName.Trim();
 
@@ -29,47 +29,75 @@ public class UserAuthService : IUserAuthService
             };
         }
 
-        var normalizedLookup = normalizedUserName.ToUpperInvariant();
-        var existingUser = await _db.Users
-            .SingleOrDefaultAsync(x => x.UserName.ToUpper() == normalizedLookup);
-        if (existingUser is not null)
+        var existingUser = await FindByUserNameAsync(normalizedUserName);
+        if (existingUser is null)
         {
-            var verifyResult = _passwordHasher.VerifyHashedPassword(existingUser, existingUser.PasswordHash, password);
-            if (verifyResult == PasswordVerificationResult.Failed)
-            {
-                return new LoginResult
-                {
-                    Succeeded = false,
-                    ErrorMessage = "Invalid email or password."
-                };
-            }
-
-            var hasChanges = false;
-            if (verifyResult == PasswordVerificationResult.SuccessRehashNeeded)
-            {
-                existingUser.PasswordHash = _passwordHasher.HashPassword(existingUser, password);
-                hasChanges = true;
-            }
-
-            var firstUserId = await _db.Users
-                .OrderBy(x => x.Id)
-                .Select(x => x.Id)
-                .FirstAsync();
-            if (existingUser.Id == firstUserId && existingUser.Role != Roles.SuperUser)
-            {
-                existingUser.Role = Roles.SuperUser;
-                hasChanges = true;
-            }
-
-            if (hasChanges)
-            {
-                await _db.SaveChangesAsync();
-            }
-
             return new LoginResult
             {
-                Succeeded = true,
-                User = existingUser
+                Succeeded = false,
+                ErrorMessage = "Invalid email or password."
+            };
+        }
+
+        var verifyResult = _passwordHasher.VerifyHashedPassword(existingUser, existingUser.PasswordHash, password);
+        if (verifyResult == PasswordVerificationResult.Failed)
+        {
+            return new LoginResult
+            {
+                Succeeded = false,
+                ErrorMessage = "Invalid email or password."
+            };
+        }
+
+        var hasChanges = false;
+        if (verifyResult == PasswordVerificationResult.SuccessRehashNeeded)
+        {
+            existingUser.PasswordHash = _passwordHasher.HashPassword(existingUser, password);
+            hasChanges = true;
+        }
+
+        var firstUserId = await _db.Users
+            .OrderBy(x => x.Id)
+            .Select(x => x.Id)
+            .FirstAsync();
+        if (existingUser.Id == firstUserId && existingUser.Role != Roles.SuperUser)
+        {
+            existingUser.Role = Roles.SuperUser;
+            hasChanges = true;
+        }
+
+        if (hasChanges)
+        {
+            await _db.SaveChangesAsync();
+        }
+
+        return new LoginResult
+        {
+            Succeeded = true,
+            User = existingUser
+        };
+    }
+
+    public async Task<LoginResult> RegisterAsync(string userName, string password)
+    {
+        var normalizedUserName = userName.Trim();
+
+        if (string.IsNullOrWhiteSpace(normalizedUserName) || string.IsNullOrWhiteSpace(password))
+        {
+            return new LoginResult
+            {
+                Succeeded = false,
+                ErrorMessage = "Email and password are required."
+            };
+        }
+
+        var existingUser = await FindByUserNameAsync(normalizedUserName);
+        if (existingUser is not null)
+        {
+            return new LoginResult
+            {
+                Succeeded = false,
+                ErrorMessage = "An account with this email already exists. Please sign in."
             };
         }
 
@@ -91,5 +119,12 @@ public class UserAuthService : IUserAuthService
             Succeeded = true,
             User = firstUser
         };
+    }
+
+    private async Task<AppUser?> FindByUserNameAsync(string userName)
+    {
+        var normalizedLookup = userName.ToUpperInvariant();
+        return await _db.Users
+            .SingleOrDefaultAsync(x => x.UserName.ToUpper() == normalizedLookup);
     }
 }
