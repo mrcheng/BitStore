@@ -119,13 +119,7 @@ app.MapStaticAssets();
 app.MapControllers();
 app.MapGet("/api", () => Results.Redirect("/swagger", permanent: false))
     .RequireAuthorization();
-app.MapGet("/demo", (IWebHostEnvironment env) =>
-{
-    var demoPath = Path.GetFullPath(Path.Combine(env.ContentRootPath, "..", "..", "testbucket-1-view.html"));
-    return File.Exists(demoPath)
-        ? Results.File(demoPath, "text/html; charset=utf-8")
-        : Results.NotFound("Demo page not found.");
-});
+app.MapGet("/demo", () => Results.Redirect("/demo/index.html", permanent: false));
 
 app.MapControllerRoute(
     name: "default",
