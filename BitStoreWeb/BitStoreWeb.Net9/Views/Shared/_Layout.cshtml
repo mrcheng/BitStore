@@ -16,6 +16,7 @@
         return "nav-link";
     }
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var isSuperUser = User.IsInRole("SuperUser");
 }
 
 <!DOCTYPE html>
@@ -56,6 +57,12 @@
                                 <span>Buckets</span>
                             </a>
                         </li>
+                        @if (isSuperUser)
+                        {
+                            <li class="nav-item">
+                                <a class="@NavClass("Users")" asp-controller="Users" asp-action="Index">Users</a>
+                            </li>
+                        }
                         <li class="nav-item">
                             <a class="@NavClass("HowTo")" asp-controller="HowTo" asp-action="Index">Tutorial</a>
                         </li>
