@@ -128,9 +128,8 @@ a:hover {
 }
 
 .nav-bucket-icon {
-  width: 0.95rem;
-  height: 0.95rem;
-  fill: currentColor;
+  font-size: 0.95rem;
+  line-height: 1;
   opacity: 0.95;
 }
 
