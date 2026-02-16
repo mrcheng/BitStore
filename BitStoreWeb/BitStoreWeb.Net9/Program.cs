@@ -1,5 +1,6 @@
 using BitStoreWeb.Net9.Data;
 using BitStoreWeb.Net9.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -92,6 +93,21 @@ app.UseCors("BitStoreApi");
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseWhen(
+    context => context.Request.Path.StartsWithSegments("/swagger"),
+    branch =>
+    {
+        branch.Use(async (context, next) =>
+        {
+            if (context.User.Identity?.IsAuthenticated == true)
+            {
+                await next();
+                return;
+            }
+
+            await context.ChallengeAsync();
+        });
+    });
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
@@ -101,7 +117,8 @@ app.UseSwaggerUI(options =>
 
 app.MapStaticAssets();
 app.MapControllers();
-app.MapGet("/api", () => Results.Redirect("/swagger", permanent: false));
+app.MapGet("/api", () => Results.Redirect("/swagger", permanent: false))
+    .RequireAuthorization();
 app.MapGet("/demo", (IWebHostEnvironment env) =>
 {
     var demoPath = Path.GetFullPath(Path.Combine(env.ContentRootPath, "..", "..", "testbucket-1-view.html"));
