@@ -2,6 +2,7 @@ const path = require("node:path");
 const { defineConfig } = require("vite");
 
 module.exports = defineConfig({
+  base: "/dist/",
   build: {
     outDir: path.resolve(__dirname, "wwwroot/dist"),
     emptyOutDir: true,
