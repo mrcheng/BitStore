@@ -97,7 +97,7 @@ public class UserAuthService : IUserAuthService
             return new LoginResult
             {
                 Succeeded = false,
-                ErrorMessage = "An account with this email already exists. Please sign in."
+                ErrorMessage = "Unable to create account with the provided credentials."
             };
         }
 
