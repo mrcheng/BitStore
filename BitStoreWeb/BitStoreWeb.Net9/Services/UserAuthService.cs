@@ -29,8 +29,9 @@ public class UserAuthService : IUserAuthService
             };
         }
 
+        var normalizedLookup = normalizedUserName.ToUpperInvariant();
         var existingUser = await _db.Users
-            .SingleOrDefaultAsync(x => EF.Functions.Collate(x.UserName, "NOCASE") == normalizedUserName);
+            .SingleOrDefaultAsync(x => x.UserName.ToUpper() == normalizedLookup);
         if (existingUser is not null)
         {
             var verifyResult = _passwordHasher.VerifyHashedPassword(existingUser, existingUser.PasswordHash, password);

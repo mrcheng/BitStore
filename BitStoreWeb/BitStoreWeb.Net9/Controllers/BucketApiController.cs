@@ -21,9 +21,10 @@ public class BucketApiController : ControllerBase
     [HttpGet("{slug}")]
     public async Task<IActionResult> GetBucket(string slug, CancellationToken cancellationToken)
     {
+        var normalizedSlug = NormalizeLookup(slug);
         var bucket = await _db.Buckets
             .AsNoTracking()
-            .Where(x => EF.Functions.Collate(x.Slug, "NOCASE") == slug)
+            .Where(x => x.Slug.ToUpper() == normalizedSlug)
             .Select(x => new BucketSnapshot(
                 x.Id,
                 x.Name,
@@ -55,9 +56,10 @@ public class BucketApiController : ControllerBase
     [HttpGet("{slug}/latest")]
     public async Task<IActionResult> GetLatestRecord(string slug, CancellationToken cancellationToken)
     {
+        var normalizedSlug = NormalizeLookup(slug);
         var bucket = await _db.Buckets
             .AsNoTracking()
-            .Where(x => EF.Functions.Collate(x.Slug, "NOCASE") == slug)
+            .Where(x => x.Slug.ToUpper() == normalizedSlug)
             .Select(x => new BucketSnapshot(
                 x.Id,
                 x.Name,
@@ -89,9 +91,10 @@ public class BucketApiController : ControllerBase
     [HttpGet("{slug}/records")]
     public async Task<IActionResult> ListRecords(string slug, [FromQuery] int take = 50, CancellationToken cancellationToken = default)
     {
+        var normalizedSlug = NormalizeLookup(slug);
         var bucket = await _db.Buckets
             .AsNoTracking()
-            .Where(x => EF.Functions.Collate(x.Slug, "NOCASE") == slug)
+            .Where(x => x.Slug.ToUpper() == normalizedSlug)
             .Select(x => new BucketSnapshot(
                 x.Id,
                 x.Name,
@@ -126,9 +129,10 @@ public class BucketApiController : ControllerBase
     [HttpGet("{slug}/records/{recordId:int}")]
     public async Task<IActionResult> GetRecord(string slug, int recordId, CancellationToken cancellationToken)
     {
+        var normalizedSlug = NormalizeLookup(slug);
         var bucketId = await _db.Buckets
             .AsNoTracking()
-            .Where(x => EF.Functions.Collate(x.Slug, "NOCASE") == slug)
+            .Where(x => x.Slug.ToUpper() == normalizedSlug)
             .Select(x => x.Id)
             .SingleOrDefaultAsync(cancellationToken);
         if (bucketId == 0)
@@ -168,8 +172,9 @@ public class BucketApiController : ControllerBase
             return BadRequest(new { message = "Value is required." });
         }
 
+        var normalizedSlug = NormalizeLookup(slug);
         var bucket = await _db.Buckets
-            .SingleOrDefaultAsync(x => EF.Functions.Collate(x.Slug, "NOCASE") == slug, cancellationToken);
+            .SingleOrDefaultAsync(x => x.Slug.ToUpper() == normalizedSlug, cancellationToken);
         if (bucket is null)
         {
             return NotFound(new { message = "Bucket not found." });
@@ -218,8 +223,9 @@ public class BucketApiController : ControllerBase
             return BadRequest(new { message = "Value is required." });
         }
 
+        var normalizedSlug = NormalizeLookup(slug);
         var bucket = await _db.Buckets
-            .SingleOrDefaultAsync(x => EF.Functions.Collate(x.Slug, "NOCASE") == slug, cancellationToken);
+            .SingleOrDefaultAsync(x => x.Slug.ToUpper() == normalizedSlug, cancellationToken);
         if (bucket is null)
         {
             return NotFound(new { message = "Bucket not found." });
@@ -253,8 +259,9 @@ public class BucketApiController : ControllerBase
         [FromQuery] string? apiKey,
         CancellationToken cancellationToken)
     {
+        var normalizedSlug = NormalizeLookup(slug);
         var bucket = await _db.Buckets
-            .SingleOrDefaultAsync(x => EF.Functions.Collate(x.Slug, "NOCASE") == slug, cancellationToken);
+            .SingleOrDefaultAsync(x => x.Slug.ToUpper() == normalizedSlug, cancellationToken);
         if (bucket is null)
         {
             return NotFound(new { message = "Bucket not found." });
@@ -288,8 +295,9 @@ public class BucketApiController : ControllerBase
         [FromQuery] string? apiKey,
         CancellationToken cancellationToken)
     {
+        var normalizedSlug = NormalizeLookup(slug);
         var bucket = await _db.Buckets
-            .SingleOrDefaultAsync(x => EF.Functions.Collate(x.Slug, "NOCASE") == slug, cancellationToken);
+            .SingleOrDefaultAsync(x => x.Slug.ToUpper() == normalizedSlug, cancellationToken);
         if (bucket is null)
         {
             return NotFound(new { message = "Bucket not found." });
@@ -321,8 +329,9 @@ public class BucketApiController : ControllerBase
         [FromQuery] string? apiKey,
         CancellationToken cancellationToken)
     {
+        var normalizedSlug = NormalizeLookup(slug);
         var bucket = await _db.Buckets
-            .SingleOrDefaultAsync(x => EF.Functions.Collate(x.Slug, "NOCASE") == slug, cancellationToken);
+            .SingleOrDefaultAsync(x => x.Slug.ToUpper() == normalizedSlug, cancellationToken);
         if (bucket is null)
         {
             return NotFound(new { message = "Bucket not found." });
@@ -351,8 +360,9 @@ public class BucketApiController : ControllerBase
         [FromQuery] string? apiKey,
         CancellationToken cancellationToken)
     {
+        var normalizedSlug = NormalizeLookup(slug);
         var bucket = await _db.Buckets
-            .SingleOrDefaultAsync(x => EF.Functions.Collate(x.Slug, "NOCASE") == slug, cancellationToken);
+            .SingleOrDefaultAsync(x => x.Slug.ToUpper() == normalizedSlug, cancellationToken);
         if (bucket is null)
         {
             return NotFound(new { message = "Bucket not found." });
@@ -399,6 +409,9 @@ public class BucketApiController : ControllerBase
 
     private static BucketRecordResponse MapRecord(BucketRecord record)
         => new(record.Id, record.Value, record.CreatedUtc, record.UpdatedUtc);
+
+    private static string NormalizeLookup(string value)
+        => value.Trim().ToUpperInvariant();
 
     private static object MapBucket(BucketSnapshot bucket)
         => new

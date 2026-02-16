@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=bitstore.db";
+var databaseProvider = builder.Configuration["DatabaseProvider"] ?? "Sqlite";
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -20,7 +22,16 @@ builder.Services.AddCors(options =>
     });
 });
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=bitstore.db"));
+{
+    if (string.Equals(databaseProvider, "SqlServer", StringComparison.OrdinalIgnoreCase))
+    {
+        options.UseSqlServer(connectionString);
+    }
+    else
+    {
+        options.UseSqlite(connectionString);
+    }
+});
 builder.Services.AddScoped<IPasswordHasher<BitStoreWeb.Net9.Models.AppUser>, PasswordHasher<BitStoreWeb.Net9.Models.AppUser>>();
 builder.Services.AddScoped<IUserAuthService, UserAuthService>();
 builder.Services.AddEndpointsApiExplorer();
@@ -57,34 +68,6 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
-    db.Database.ExecuteSqlRaw(
-        """
-        CREATE TABLE IF NOT EXISTS "Buckets" (
-            "Id" INTEGER NOT NULL CONSTRAINT "PK_Buckets" PRIMARY KEY AUTOINCREMENT,
-            "OwnerUserId" INTEGER NOT NULL,
-            "Name" TEXT NOT NULL,
-            "Description" TEXT NULL,
-            "Slug" TEXT NOT NULL,
-            "WriteApiKey" TEXT NOT NULL,
-            "CreatedUtc" TEXT NOT NULL,
-            "UpdatedUtc" TEXT NOT NULL,
-            CONSTRAINT "FK_Buckets_Users_OwnerUserId" FOREIGN KEY ("OwnerUserId") REFERENCES "Users" ("Id") ON DELETE CASCADE
-        );
-        """);
-    db.Database.ExecuteSqlRaw(
-        """
-        CREATE TABLE IF NOT EXISTS "BucketRecords" (
-            "Id" INTEGER NOT NULL CONSTRAINT "PK_BucketRecords" PRIMARY KEY AUTOINCREMENT,
-            "BucketId" INTEGER NOT NULL,
-            "Value" TEXT NULL,
-            "CreatedUtc" TEXT NOT NULL,
-            "UpdatedUtc" TEXT NOT NULL,
-            CONSTRAINT "FK_BucketRecords_Buckets_BucketId" FOREIGN KEY ("BucketId") REFERENCES "Buckets" ("Id") ON DELETE CASCADE
-        );
-        """);
-    db.Database.ExecuteSqlRaw("""CREATE UNIQUE INDEX IF NOT EXISTS "IX_Buckets_OwnerUserId_Name" ON "Buckets" ("OwnerUserId", "Name");""");
-    db.Database.ExecuteSqlRaw("""CREATE UNIQUE INDEX IF NOT EXISTS "IX_Buckets_Slug" ON "Buckets" ("Slug");""");
-    db.Database.ExecuteSqlRaw("""CREATE INDEX IF NOT EXISTS "IX_BucketRecords_BucketId_CreatedUtc" ON "BucketRecords" ("BucketId", "CreatedUtc");""");
 }
 
 // Configure the HTTP request pipeline.

@@ -138,6 +138,12 @@ npm --prefix BitStoreWeb.Net9 run build
 dotnet build BitStoreWeb.Net9/BitStoreWeb.Net9.csproj
 ```
 
+## Deploy
+
+- Azure deployment walkthrough: `docs/DEPLOY_AZURE.md`
+- GitHub Actions workflow: `.github/workflows/ci.yml`
+- GitHub Actions workflow: `.github/workflows/deploy-azure-webapp.yml`
+
 ## Project Layout
 
 - Main app: `BitStoreWeb.Net9`

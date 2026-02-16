@@ -1,0 +1,49 @@
+name: Deploy Azure Web App
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: BitStoreWeb.Net9/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix BitStoreWeb.Net9
+
+      - name: Build frontend assets
+        run: npm --prefix BitStoreWeb.Net9 run build
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Restore .NET dependencies
+        run: dotnet restore BitStoreWeb.Net9/BitStoreWeb.Net9.csproj
+
+      - name: Publish .NET app
+        run: dotnet publish BitStoreWeb.Net9/BitStoreWeb.Net9.csproj --configuration Release --no-restore --output ./publish
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ./publish

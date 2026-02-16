@@ -76,8 +76,9 @@ public class BucketsController : Controller
             return View("Index", model);
         }
 
+        var normalizedBucketName = model.NewBucketName.ToUpperInvariant();
         var nameExists = await _db.Buckets.AnyAsync(
-            x => x.OwnerUserId == userId.Value && EF.Functions.Collate(x.Name, "NOCASE") == model.NewBucketName,
+            x => x.OwnerUserId == userId.Value && x.Name.ToUpper() == normalizedBucketName,
             cancellationToken);
         if (nameExists)
         {
