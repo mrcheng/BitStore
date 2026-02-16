@@ -46,6 +46,7 @@ In App Service -> **Environment variables**, add:
 
 - `DatabaseProvider` = `SqlServer`
 - `ConnectionStrings__DefaultConnection` = your Azure SQL connection string
+- `Slack__RegistrationWebhookUrl` = your Slack Incoming Webhook URL (optional, for new-user alerts)
 
 Example connection string:
 

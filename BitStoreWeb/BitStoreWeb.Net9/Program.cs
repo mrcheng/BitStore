@@ -43,6 +43,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 builder.Services.AddScoped<IPasswordHasher<BitStoreWeb.Net9.Models.AppUser>, PasswordHasher<BitStoreWeb.Net9.Models.AppUser>>();
 builder.Services.AddScoped<IUserAuthService, UserAuthService>();
+builder.Services.AddHttpClient<IUserRegistrationNotifier, SlackUserRegistrationNotifier>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {

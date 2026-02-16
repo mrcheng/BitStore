@@ -16,11 +16,16 @@ public class AccountController : Controller
     private const string RegisterMode = "register";
 
     private readonly IUserAuthService _userAuthService;
+    private readonly IUserRegistrationNotifier _userRegistrationNotifier;
     private readonly AppDbContext _db;
 
-    public AccountController(IUserAuthService userAuthService, AppDbContext db)
+    public AccountController(
+        IUserAuthService userAuthService,
+        IUserRegistrationNotifier userRegistrationNotifier,
+        AppDbContext db)
     {
         _userAuthService = userAuthService;
+        _userRegistrationNotifier = userRegistrationNotifier;
         _db = db;
     }
 
@@ -87,6 +92,11 @@ public class AccountController : Controller
             CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(claimsIdentity),
             authProperties);
+
+        if (authMode == RegisterMode)
+        {
+            await _userRegistrationNotifier.NotifyUserRegisteredAsync(user);
+        }
 
         return RedirectToLocal(returnUrl);
     }
