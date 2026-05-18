@@ -21,6 +21,12 @@ npm --prefix BitStoreWeb/BitStoreWeb.Net9 run build
 dotnet build BitStoreWeb/BitStoreWeb.Net9/BitStoreWeb.Net9.csproj
 ```
 
+## Deploy
+
+- Linux/MySQL deployment walkthrough: `BitStoreWeb/docs/DEPLOY_LINUX_MYSQL.md`
+- CI workflow: `.github/workflows/ci.yml`
+- SSH deploy workflow: `.github/workflows/deploy-linux-mysql.yml`
+
 ## Frontend Tooling
 
 - Package manager: `npm`

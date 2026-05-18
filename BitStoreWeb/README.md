@@ -19,7 +19,7 @@ Instead of building ad-hoc key/value plumbing, you get a ready-to-run product wi
 - Tutorial page (`/HowTo`)
 - Swagger API docs (`/api` -> `/swagger`)
 - Logged-out demo client (`/demo`)
-- SQLite persistence out of the box
+- MySQL persistence for local and production use
 
 ## 2-Minute Quick Start
 
@@ -141,9 +141,9 @@ dotnet build BitStoreWeb.Net9/BitStoreWeb.Net9.csproj
 
 ## Deploy
 
-- Azure deployment walkthrough: `docs/DEPLOY_AZURE.md`
+- Linux/MySQL deployment walkthrough: `docs/DEPLOY_LINUX_MYSQL.md`
 - GitHub Actions workflow: `.github/workflows/ci.yml`
-- GitHub Actions workflow: `.github/workflows/deploy-azure-webapp.yml`
+- GitHub Actions workflow: `.github/workflows/deploy-linux-mysql.yml`
 
 ## Project Layout
 

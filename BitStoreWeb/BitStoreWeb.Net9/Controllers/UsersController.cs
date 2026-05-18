@@ -140,72 +140,83 @@ public class UsersController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
-
-        if (hasExistingData)
-        {
-            _db.BucketRecords.RemoveRange(_db.BucketRecords);
-            _db.Buckets.RemoveRange(_db.Buckets);
-            _db.Users.RemoveRange(_db.Users);
-            await _db.SaveChangesAsync(cancellationToken);
-        }
-
         var importedUsers = new List<AppUser>();
-        foreach (var exportedUser in document.Users)
-        {
-            importedUsers.Add(new AppUser
-            {
-                UserName = exportedUser.UserName.Trim(),
-                PasswordHash = exportedUser.PasswordHash,
-                Role = string.IsNullOrWhiteSpace(exportedUser.Role) ? Roles.User : exportedUser.Role,
-                CreatedUtc = exportedUser.CreatedUtc
-            });
-        }
-
-        _db.Users.AddRange(importedUsers);
-        await _db.SaveChangesAsync(cancellationToken);
-
-        var exportedBuckets = new List<BitStoreExportBucket>();
         var importedBuckets = new List<Bucket>();
-        for (var userIndex = 0; userIndex < document.Users.Count; userIndex++)
+        var importedRecords = new List<BucketRecord>();
+
+        var strategy = _db.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
         {
-            var owner = importedUsers[userIndex];
-            foreach (var exportedBucket in document.Users[userIndex].Buckets)
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+            if (hasExistingData)
             {
-                exportedBuckets.Add(exportedBucket);
-                importedBuckets.Add(new Bucket
+                _db.BucketRecords.RemoveRange(_db.BucketRecords);
+                _db.Buckets.RemoveRange(_db.Buckets);
+                _db.Users.RemoveRange(_db.Users);
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+
+            importedUsers.Clear();
+            foreach (var exportedUser in document.Users)
+            {
+                importedUsers.Add(new AppUser
                 {
-                    OwnerUserId = owner.Id,
-                    Name = exportedBucket.Name,
-                    Description = exportedBucket.Description,
-                    Slug = exportedBucket.Slug,
-                    WriteApiKey = exportedBucket.WriteApiKey,
-                    CreatedUtc = exportedBucket.CreatedUtc,
-                    UpdatedUtc = exportedBucket.UpdatedUtc
+                    Id = exportedUser.Id,
+                    UserName = exportedUser.UserName.Trim(),
+                    PasswordHash = exportedUser.PasswordHash,
+                    Role = string.IsNullOrWhiteSpace(exportedUser.Role) ? Roles.User : exportedUser.Role,
+                    CreatedUtc = exportedUser.CreatedUtc
                 });
             }
-        }
 
-        _db.Buckets.AddRange(importedBuckets);
-        await _db.SaveChangesAsync(cancellationToken);
+            _db.Users.AddRange(importedUsers);
+            await _db.SaveChangesAsync(cancellationToken);
 
-        var importedRecords = new List<BucketRecord>();
-        for (var bucketIndex = 0; bucketIndex < importedBuckets.Count; bucketIndex++)
-        {
-            var exportedBucket = exportedBuckets[bucketIndex];
-            var importedBucket = importedBuckets[bucketIndex];
-            importedRecords.AddRange(exportedBucket.Records.Select(exportedRecord => new BucketRecord
+            var exportedBuckets = new List<BitStoreExportBucket>();
+            importedBuckets.Clear();
+            for (var userIndex = 0; userIndex < document.Users.Count; userIndex++)
             {
-                BucketId = importedBucket.Id,
-                Value = exportedRecord.Value,
-                CreatedUtc = exportedRecord.CreatedUtc,
-                UpdatedUtc = exportedRecord.UpdatedUtc
-            }));
-        }
+                var owner = importedUsers[userIndex];
+                foreach (var exportedBucket in document.Users[userIndex].Buckets)
+                {
+                    exportedBuckets.Add(exportedBucket);
+                    importedBuckets.Add(new Bucket
+                    {
+                        Id = exportedBucket.Id,
+                        OwnerUserId = owner.Id,
+                        Name = exportedBucket.Name,
+                        Description = exportedBucket.Description,
+                        Slug = exportedBucket.Slug,
+                        WriteApiKey = exportedBucket.WriteApiKey,
+                        CreatedUtc = exportedBucket.CreatedUtc,
+                        UpdatedUtc = exportedBucket.UpdatedUtc
+                    });
+                }
+            }
 
-        _db.BucketRecords.AddRange(importedRecords);
-        await _db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+            _db.Buckets.AddRange(importedBuckets);
+            await _db.SaveChangesAsync(cancellationToken);
+
+            importedRecords.Clear();
+            for (var bucketIndex = 0; bucketIndex < importedBuckets.Count; bucketIndex++)
+            {
+                var exportedBucket = exportedBuckets[bucketIndex];
+                var importedBucket = importedBuckets[bucketIndex];
+                importedRecords.AddRange(exportedBucket.Records.Select(exportedRecord => new BucketRecord
+                {
+                    Id = exportedRecord.Id,
+                    BucketId = importedBucket.Id,
+                    Value = exportedRecord.Value,
+                    CreatedUtc = exportedRecord.CreatedUtc,
+                    UpdatedUtc = exportedRecord.UpdatedUtc
+                }));
+            }
+
+            _db.BucketRecords.AddRange(importedRecords);
+            await _db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        });
 
         TempData["StatusMessage"] = $"Imported {importedUsers.Count} users, {importedBuckets.Count} buckets, and {importedRecords.Count} records.";
         return RedirectToAction(nameof(Index));

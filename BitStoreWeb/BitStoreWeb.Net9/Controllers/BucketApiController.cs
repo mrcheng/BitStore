@@ -185,6 +185,13 @@ public class BucketApiController : ControllerBase
             return Unauthorized(new { message = writeAccessError });
         }
 
+        if (await FreeRecordLimitReachedAsync(bucket.Id, bucket.OwnerUserId, cancellationToken))
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new { message = $"Free accounts can store up to {AccountLimits.FreeRecordLimit} records per bucket." });
+        }
+
         var record = new BucketRecord
         {
             BucketId = bucket.Id,
@@ -405,6 +412,23 @@ public class BucketApiController : ControllerBase
 
         errorMessage = "Write access requires X-BitStore-Key or owner session.";
         return false;
+    }
+
+    private async Task<bool> FreeRecordLimitReachedAsync(int bucketId, int ownerUserId, CancellationToken cancellationToken)
+    {
+        var userRole = await _db.Users
+            .AsNoTracking()
+            .Where(x => x.Id == ownerUserId)
+            .Select(x => x.Role)
+            .SingleOrDefaultAsync(cancellationToken);
+        if (!AccountLimits.IsFreeAccount(userRole))
+        {
+            return false;
+        }
+
+        var recordCount = await _db.BucketRecords
+            .CountAsync(x => x.BucketId == bucketId, cancellationToken);
+        return recordCount >= AccountLimits.FreeRecordLimit;
     }
 
     private static BucketRecordResponse MapRecord(BucketRecord record)

@@ -13,6 +13,12 @@
         <a asp-controller="Buckets" asp-action="Index" class="btn btn-primary btn-lg">Open Buckets</a>
         <a href="/api" class="btn btn-outline-primary btn-lg">View API</a>
     </div>
+    @if (User.Identity?.IsAuthenticated != true)
+    {
+        <p class="small text-muted mt-3 mb-0">
+            New here? <a asp-controller="Account" asp-action="Login" asp-route-mode="register">Create a free account here</a>.
+        </p>
+    }
 </section>
 
 <section class="mt-4">

@@ -2,15 +2,23 @@ using BitStoreWeb.Net9.Data;
 using BitStoreWeb.Net9.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=bitstore.db";
-var databaseProvider = builder.Configuration["DatabaseProvider"] ?? "Sqlite";
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Server=localhost;Port=3306;Database=bitstore;User=bitstore;Password=change-me;";
+var mySqlServerVersion = GetConfiguredMySqlServerVersion(builder.Configuration);
 
 // Add services to the container.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 builder.Services.AddControllersWithViews();
 builder.Services.AddCors(options =>
 {
@@ -24,22 +32,16 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    if (string.Equals(databaseProvider, "SqlServer", StringComparison.OrdinalIgnoreCase))
-    {
-        options.UseSqlServer(
-            connectionString,
-            sqlServerOptions =>
-            {
-                sqlServerOptions.EnableRetryOnFailure(
-                    maxRetryCount: 10,
-                    maxRetryDelay: TimeSpan.FromSeconds(30),
-                    errorNumbersToAdd: null);
-            });
-    }
-    else
-    {
-        options.UseSqlite(connectionString);
-    }
+    options.UseMySql(
+        connectionString,
+        new MySqlServerVersion(mySqlServerVersion),
+        mySqlOptions =>
+        {
+            mySqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 10,
+                maxRetryDelay: TimeSpan.FromSeconds(30),
+                errorNumbersToAdd: null);
+        });
 });
 builder.Services.AddScoped<IPasswordHasher<BitStoreWeb.Net9.Models.AppUser>, PasswordHasher<BitStoreWeb.Net9.Models.AppUser>>();
 builder.Services.AddScoped<IUserAuthService, UserAuthService>();
@@ -70,6 +72,24 @@ builder.Services
         options.AccessDeniedPath = "/Account/Login";
         options.SlidingExpiration = true;
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            var userIdClaim = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out var userId))
+            {
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return;
+            }
+
+            var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+            var userExists = await db.Users.AnyAsync(x => x.Id == userId);
+            if (!userExists)
+            {
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            }
+        };
     });
 
 var app = builder.Build();
@@ -88,6 +108,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.UseForwardedHeaders();
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("BitStoreApi");
@@ -128,3 +149,11 @@ app.MapControllerRoute(
 
 
 app.Run();
+
+static Version GetConfiguredMySqlServerVersion(IConfiguration configuration)
+{
+    var configuredVersion = configuration["MySql:ServerVersion"];
+    return Version.TryParse(configuredVersion, out var version)
+        ? version
+        : new Version(8, 0, 0);
+}

@@ -68,6 +68,12 @@ public class BucketController : Controller
             return RedirectToAction(nameof(Index), new { id });
         }
 
+        if (await FreeRecordLimitReachedAsync(bucket.Id, userId.Value, cancellationToken))
+        {
+            TempData["ErrorMessage"] = $"Free accounts can store up to {AccountLimits.FreeRecordLimit} records per bucket.";
+            return RedirectToAction(nameof(Index), new { id });
+        }
+
         _db.BucketRecords.Add(new BucketRecord
         {
             BucketId = bucket.Id,
@@ -254,6 +260,23 @@ public class BucketController : Controller
     {
         return await _db.Buckets
             .SingleOrDefaultAsync(x => x.Id == bucketId && x.OwnerUserId == userId, cancellationToken);
+    }
+
+    private async Task<bool> FreeRecordLimitReachedAsync(int bucketId, int userId, CancellationToken cancellationToken)
+    {
+        var userRole = await _db.Users
+            .AsNoTracking()
+            .Where(x => x.Id == userId)
+            .Select(x => x.Role)
+            .SingleOrDefaultAsync(cancellationToken);
+        if (!AccountLimits.IsFreeAccount(userRole))
+        {
+            return false;
+        }
+
+        var recordCount = await _db.BucketRecords
+            .CountAsync(x => x.BucketId == bucketId, cancellationToken);
+        return recordCount >= AccountLimits.FreeRecordLimit;
     }
 
     private async Task<BucketDetailsViewModel> BuildViewModelAsync(Bucket bucket, CancellationToken cancellationToken)

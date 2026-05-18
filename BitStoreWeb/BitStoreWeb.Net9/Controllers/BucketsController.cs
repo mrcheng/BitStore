@@ -76,6 +76,25 @@ public class BucketsController : Controller
             return View("Index", model);
         }
 
+        var userRole = await _db.Users
+            .AsNoTracking()
+            .Where(x => x.Id == userId.Value)
+            .Select(x => x.Role)
+            .SingleOrDefaultAsync(cancellationToken);
+        if (AccountLimits.IsFreeAccount(userRole))
+        {
+            var bucketCount = await _db.Buckets
+                .CountAsync(x => x.OwnerUserId == userId.Value, cancellationToken);
+            if (bucketCount >= AccountLimits.FreeBucketLimit)
+            {
+                ModelState.AddModelError(
+                    nameof(model.NewBucketName),
+                    $"Free accounts can create {AccountLimits.FreeBucketLimit} bucket.");
+                model.Buckets = await LoadBucketSummariesAsync(userId.Value, cancellationToken);
+                return View("Index", model);
+            }
+        }
+
         var normalizedBucketName = model.NewBucketName.ToUpperInvariant();
         var nameExists = await _db.Buckets.AnyAsync(
             x => x.OwnerUserId == userId.Value && x.Name.ToUpper() == normalizedBucketName,

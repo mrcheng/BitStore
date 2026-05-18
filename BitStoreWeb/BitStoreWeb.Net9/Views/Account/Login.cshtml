@@ -20,7 +20,7 @@
                 </p>
                 <p class="small text-muted mb-4">
                     @(isRegisterMode
-                        ? "After account creation, you'll be signed in automatically."
+                        ? $"Free accounts include {AccountLimits.FreeBucketLimit} bucket with up to {AccountLimits.FreeRecordLimit} records. After account creation, you'll be signed in automatically."
                         : "No account yet? Use Create account.")
                 </p>
 

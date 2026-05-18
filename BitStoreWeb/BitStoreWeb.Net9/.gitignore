@@ -3,3 +3,5 @@ wwwroot/dist/
 bitstore.db
 bitstore.db-shm
 bitstore.db-wal
+bitstore-local.*.log
+bitstore-run.*.log
