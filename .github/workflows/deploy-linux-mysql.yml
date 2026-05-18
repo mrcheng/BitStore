@@ -114,6 +114,7 @@ jobs:
           source: "publish/*"
           target: ${{ secrets.SSH_TARGET || '/httpdocs' }}
           strip_components: 1
+          rm: true
 
       - name: Restart app service
         if: ${{ env.SSH_SERVICE_NAME != '' }}
