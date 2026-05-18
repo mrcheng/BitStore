@@ -75,7 +75,7 @@ jobs:
         run: dotnet restore BitStoreWeb/BitStoreWeb.Net9/BitStoreWeb.Net9.csproj
 
       - name: Publish .NET app
-        run: dotnet publish BitStoreWeb/BitStoreWeb.Net9/BitStoreWeb.Net9.csproj --configuration Release --no-restore --output ./publish
+        run: dotnet publish BitStoreWeb/BitStoreWeb.Net9/BitStoreWeb.Net9.csproj --configuration Release --no-restore --runtime linux-x64 --self-contained true --output ./publish
 
       - name: Write production settings
         shell: pwsh
