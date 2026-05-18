@@ -41,9 +41,12 @@ SSH_PASSWORD=your-ssh-password
 SSH_PORT=22
 SSH_TARGET=/httpdocs
 SSH_SERVICE_NAME=bitstore
+DB_CONNECTION_STRING=Server=YOUR_DB_HOST;Port=3306;Database=YOUR_DB;User=YOUR_USER;Password=YOUR_PASSWORD;
+MYSQL_SERVER_VERSION=8.0.0
+SLACK_REGISTRATION_WEBHOOK_URL=
 ```
 
-`SSH_PORT`, `SSH_TARGET`, and `SSH_SERVICE_NAME` are optional. The workflow defaults to port `22` and target `/httpdocs`.
+`SSH_PORT`, `SSH_TARGET`, `SSH_SERVICE_NAME`, and `SLACK_REGISTRATION_WEBHOOK_URL` are optional. The workflow defaults to port `22` and target `/httpdocs`.
 
 If `SSH_SERVICE_NAME` is set, the workflow runs:
 
