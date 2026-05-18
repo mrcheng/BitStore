@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+
 namespace BitStoreWeb.Net9.Models;
 
 public class UsersViewModel
@@ -5,6 +7,10 @@ public class UsersViewModel
     public int TotalUsers { get; set; }
 
     public IReadOnlyList<UserSummaryViewModel> Users { get; set; } = Array.Empty<UserSummaryViewModel>();
+
+    public IFormFile? ImportFile { get; set; }
+
+    public bool ReplaceExistingData { get; set; }
 
     public class UserSummaryViewModel
     {

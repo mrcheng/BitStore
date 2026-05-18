@@ -73,3 +73,38 @@
         </div>
     </div>
 </div>
+
+<div class="card fade-in-up">
+    <div class="card-body">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3">
+            <div>
+                <h2 class="h5 mb-1">Data Portability</h2>
+                <p class="text-muted mb-0">Export or import all users, buckets, records, password hashes, and API keys.</p>
+            </div>
+            <a class="btn btn-outline-primary align-self-start" asp-action="Export" asp-controller="Users">
+                <i class="fa-solid fa-download me-1" aria-hidden="true"></i>
+                Export JSON
+            </a>
+        </div>
+
+        <form asp-action="Import" asp-controller="Users" method="post" enctype="multipart/form-data" class="row g-3 align-items-end">
+            @Html.AntiForgeryToken()
+            <div class="col-lg-6">
+                <label asp-for="ImportFile" class="form-label">Import JSON</label>
+                <input asp-for="ImportFile" type="file" accept="application/json,.json" class="form-control" />
+            </div>
+            <div class="col-lg-4">
+                <div class="form-check">
+                    <input asp-for="ReplaceExistingData" class="form-check-input" />
+                    <label asp-for="ReplaceExistingData" class="form-check-label">Replace existing data</label>
+                </div>
+            </div>
+            <div class="col-lg-2 text-lg-end">
+                <button type="submit" class="btn btn-primary" onclick="return confirm('Import this file and replace existing data if selected?');">
+                    <i class="fa-solid fa-upload me-1" aria-hidden="true"></i>
+                    Import
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
