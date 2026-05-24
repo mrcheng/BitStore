@@ -23,9 +23,9 @@ dotnet build BitStoreWeb/BitStoreWeb.Net9/BitStoreWeb.Net9.csproj
 
 ## Deploy
 
-- Linux/MySQL deployment walkthrough: `BitStoreWeb/docs/DEPLOY_LINUX_MYSQL.md`
+- Oracle VM Docker deploy: `BitStoreWeb/BitStoreWeb.Net9/deploy/oracle/README.md`
+- Oracle deploy workflow: `.github/workflows/deploy-oracle.yml`
 - CI workflow: `.github/workflows/ci.yml`
-- SSH deploy workflow: `.github/workflows/deploy-linux-mysql.yml`
 
 ## Frontend Tooling
 
