@@ -1,7 +1,11 @@
 node_modules/
+bin_verify/
 wwwroot/dist/
+.env
+*.env.local
 bitstore.db
 bitstore.db-shm
 bitstore.db-wal
 bitstore-local.*.log
 bitstore-run.*.log
+deploy-secrets.tmp

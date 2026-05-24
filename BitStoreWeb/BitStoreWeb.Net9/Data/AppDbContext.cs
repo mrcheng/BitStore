@@ -49,6 +49,8 @@ public class AppDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Value).HasMaxLength(8);
             entity.HasIndex(x => new { x.BucketId, x.CreatedUtc });
+            entity.HasIndex(x => new { x.BucketId, x.UpdatedUtc });
+            entity.HasIndex(x => new { x.BucketId, x.Value });
             entity.HasOne(x => x.Bucket)
                 .WithMany(x => x.Records)
                 .HasForeignKey(x => x.BucketId)

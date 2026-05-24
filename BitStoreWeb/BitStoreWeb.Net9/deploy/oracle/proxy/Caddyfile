@@ -1,0 +1,4 @@
+bitstore.mrcheng.se {
+    encode zstd gzip
+    reverse_proxy bitstore-web:8080
+}

@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
 using System.Security.Claims;
+using System.Text;
 using BitStoreWeb.Net9.Data;
 using BitStoreWeb.Net9.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -89,8 +91,40 @@ public class BucketApiController : ControllerBase
     }
 
     [HttpGet("{slug}/records")]
-    public async Task<IActionResult> ListRecords(string slug, [FromQuery] int take = 50, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> ListRecords(
+        string slug,
+        [FromQuery] int take = 50,
+        [FromQuery] string? cursor = null,
+        [FromQuery] DateTime? fromUtc = null,
+        [FromQuery] DateTime? toUtc = null,
+        [FromQuery] DateTime? beforeUtc = null,
+        [FromQuery] DateTime? updatedFromUtc = null,
+        [FromQuery] DateTime? updatedToUtc = null,
+        [FromQuery] string? value = null,
+        [FromQuery] string? valuePrefix = null,
+        [FromQuery] string[]? valuePrefixes = null,
+        [FromQuery] string? valuePrefixFrom = null,
+        [FromQuery] string? valuePrefixTo = null,
+        [FromQuery] string? valueContains = null,
+        CancellationToken cancellationToken = default)
     {
+        var query = new ListBucketRecordsQuery
+        {
+            Take = take,
+            Cursor = cursor,
+            FromUtc = fromUtc,
+            ToUtc = toUtc,
+            BeforeUtc = beforeUtc,
+            UpdatedFromUtc = updatedFromUtc,
+            UpdatedToUtc = updatedToUtc,
+            Value = value,
+            ValuePrefix = valuePrefix,
+            ValuePrefixes = valuePrefixes,
+            ValuePrefixFrom = valuePrefixFrom,
+            ValuePrefixTo = valuePrefixTo,
+            ValueContains = valueContains
+        };
+
         var normalizedSlug = NormalizeLookup(slug);
         var bucket = await _db.Buckets
             .AsNoTracking()
@@ -108,20 +142,102 @@ public class BucketApiController : ControllerBase
             return NotFound(new { message = "Bucket not found." });
         }
 
-        var safeTake = Math.Clamp(take, 1, 200);
-        var records = await _db.BucketRecords
+        var safeTake = Math.Clamp(query.Take, 1, 200);
+        if (!TryDecodeCursor(query.Cursor, out var recordCursor, out var cursorError))
+        {
+            return BadRequest(new { message = cursorError });
+        }
+
+        var recordsQuery = _db.BucketRecords
             .AsNoTracking()
-            .Where(x => x.BucketId == bucket.Id)
+            .Where(x => x.BucketId == bucket.Id);
+
+        if (query.FromUtc.HasValue)
+        {
+            var normalizedFromUtc = NormalizeUtc(query.FromUtc.Value);
+            recordsQuery = recordsQuery.Where(x => x.CreatedUtc >= normalizedFromUtc);
+        }
+
+        if (query.ToUtc.HasValue)
+        {
+            var normalizedToUtc = NormalizeUtc(query.ToUtc.Value);
+            recordsQuery = recordsQuery.Where(x => x.CreatedUtc < normalizedToUtc);
+        }
+
+        if (query.BeforeUtc.HasValue)
+        {
+            var normalizedBeforeUtc = NormalizeUtc(query.BeforeUtc.Value);
+            recordsQuery = recordsQuery.Where(x => x.CreatedUtc < normalizedBeforeUtc);
+        }
+
+        if (query.UpdatedFromUtc.HasValue)
+        {
+            var normalizedUpdatedFromUtc = NormalizeUtc(query.UpdatedFromUtc.Value);
+            recordsQuery = recordsQuery.Where(x => x.UpdatedUtc >= normalizedUpdatedFromUtc);
+        }
+
+        if (query.UpdatedToUtc.HasValue)
+        {
+            var normalizedUpdatedToUtc = NormalizeUtc(query.UpdatedToUtc.Value);
+            recordsQuery = recordsQuery.Where(x => x.UpdatedUtc < normalizedUpdatedToUtc);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Value))
+        {
+            var normalizedValue = query.Value.Trim();
+            recordsQuery = recordsQuery.Where(x => x.Value == normalizedValue);
+        }
+
+        var normalizedValuePrefixes = NormalizeValuePrefixes(query.ValuePrefix, query.ValuePrefixes);
+        if (normalizedValuePrefixes.Count > 0)
+        {
+            recordsQuery = recordsQuery.Where(BuildValuePrefixesPredicate(normalizedValuePrefixes));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.ValuePrefixFrom))
+        {
+            var normalizedValuePrefixFrom = query.ValuePrefixFrom.Trim();
+            recordsQuery = recordsQuery.Where(x => x.Value != null && string.Compare(x.Value, normalizedValuePrefixFrom) >= 0);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.ValuePrefixTo))
+        {
+            var normalizedValuePrefixTo = query.ValuePrefixTo.Trim();
+            recordsQuery = recordsQuery.Where(x => x.Value != null && string.Compare(x.Value, normalizedValuePrefixTo) < 0);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.ValueContains))
+        {
+            var normalizedValueContains = query.ValueContains.Trim();
+            recordsQuery = recordsQuery.Where(x => x.Value != null && x.Value.Contains(normalizedValueContains));
+        }
+
+        if (recordCursor is not null)
+        {
+            recordsQuery = recordsQuery.Where(x =>
+                x.CreatedUtc < recordCursor.CreatedUtc ||
+                x.CreatedUtc == recordCursor.CreatedUtc && x.Id < recordCursor.Id);
+        }
+
+        var recordsPage = await recordsQuery
             .OrderByDescending(x => x.CreatedUtc)
             .ThenByDescending(x => x.Id)
-            .Take(safeTake)
+            .Take(safeTake + 1)
             .Select(x => new BucketRecordResponse(x.Id, x.Value, x.CreatedUtc, x.UpdatedUtc))
             .ToListAsync(cancellationToken);
+
+        var hasMore = recordsPage.Count > safeTake;
+        var records = recordsPage.Take(safeTake).ToList();
+        var nextCursor = hasMore && records.Count > 0
+            ? EncodeCursor(records[^1])
+            : null;
 
         return Ok(new
         {
             bucket = MapBucket(bucket),
             count = records.Count,
+            hasMore,
+            nextCursor,
             records
         });
     }
@@ -437,6 +553,111 @@ public class BucketApiController : ControllerBase
     private static string NormalizeLookup(string value)
         => value.Trim().ToUpperInvariant();
 
+    private static DateTime NormalizeUtc(DateTime value)
+        => value.Kind switch
+        {
+            DateTimeKind.Local => value.ToUniversalTime(),
+            DateTimeKind.Utc => value,
+            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
+        };
+
+    private static List<string> NormalizeValuePrefixes(string? valuePrefix, string[]? valuePrefixes)
+    {
+        var prefixes = new List<string>();
+        AddPrefix(valuePrefix, prefixes);
+
+        if (valuePrefixes is not null)
+        {
+            foreach (var entry in valuePrefixes)
+            {
+                if (string.IsNullOrWhiteSpace(entry))
+                {
+                    continue;
+                }
+
+                foreach (var prefix in entry.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    AddPrefix(prefix, prefixes);
+                }
+            }
+        }
+
+        return prefixes
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+    }
+
+    private static void AddPrefix(string? value, List<string> prefixes)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            prefixes.Add(value.Trim());
+        }
+    }
+
+    private static Expression<Func<BucketRecord, bool>> BuildValuePrefixesPredicate(IReadOnlyList<string> prefixes)
+    {
+        var record = Expression.Parameter(typeof(BucketRecord), "record");
+        var value = Expression.Property(record, nameof(BucketRecord.Value));
+        var notNull = Expression.NotEqual(value, Expression.Constant(null, typeof(string)));
+        var startsWithMethod = typeof(string).GetMethod(nameof(string.StartsWith), [typeof(string)])!;
+        Expression? prefixChecks = null;
+
+        foreach (var prefix in prefixes)
+        {
+            var startsWith = Expression.Call(value, startsWithMethod, Expression.Constant(prefix));
+            prefixChecks = prefixChecks is null
+                ? startsWith
+                : Expression.OrElse(prefixChecks, startsWith);
+        }
+
+        var body = Expression.AndAlso(notNull, prefixChecks ?? Expression.Constant(false));
+        return Expression.Lambda<Func<BucketRecord, bool>>(body, record);
+    }
+
+    private static string EncodeCursor(BucketRecordResponse record)
+    {
+        var cursorValue = $"{record.CreatedUtc.Ticks}:{record.Id}";
+        return Convert.ToBase64String(Encoding.UTF8.GetBytes(cursorValue))
+            .TrimEnd('=')
+            .Replace('+', '-')
+            .Replace('/', '_');
+    }
+
+    private static bool TryDecodeCursor(string? value, out RecordCursor? cursor, out string errorMessage)
+    {
+        cursor = null;
+        errorMessage = string.Empty;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return true;
+        }
+
+        var paddedValue = value.Trim()
+            .Replace('-', '+')
+            .Replace('_', '/');
+        paddedValue = paddedValue.PadRight(paddedValue.Length + (4 - paddedValue.Length % 4) % 4, '=');
+
+        try
+        {
+            var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(paddedValue));
+            var parts = decoded.Split(':', 2);
+            if (parts.Length == 2 &&
+                long.TryParse(parts[0], out var ticks) &&
+                int.TryParse(parts[1], out var id))
+            {
+                cursor = new RecordCursor(new DateTime(ticks, DateTimeKind.Utc), id);
+                return true;
+            }
+        }
+        catch (FormatException)
+        {
+        }
+
+        errorMessage = "Invalid cursor.";
+        return false;
+    }
+
     private static object MapBucket(BucketSnapshot bucket)
         => new
         {
@@ -461,6 +682,37 @@ public class BucketApiController : ControllerBase
         string? Value,
         DateTime CreatedUtc,
         DateTime UpdatedUtc);
+
+    private sealed record RecordCursor(DateTime CreatedUtc, int Id);
+
+    public sealed class ListBucketRecordsQuery
+    {
+        public int Take { get; set; } = 50;
+
+        public string? Cursor { get; set; }
+
+        public DateTime? FromUtc { get; set; }
+
+        public DateTime? ToUtc { get; set; }
+
+        public DateTime? BeforeUtc { get; set; }
+
+        public DateTime? UpdatedFromUtc { get; set; }
+
+        public DateTime? UpdatedToUtc { get; set; }
+
+        public string? Value { get; set; }
+
+        public string? ValuePrefix { get; set; }
+
+        public string[]? ValuePrefixes { get; set; }
+
+        public string? ValuePrefixFrom { get; set; }
+
+        public string? ValuePrefixTo { get; set; }
+
+        public string? ValueContains { get; set; }
+    }
 
     public sealed class UpsertBucketRecordRequest
     {

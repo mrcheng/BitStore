@@ -1,0 +1,24 @@
+services:
+  bitstore-web:
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+    container_name: bitstore-web
+    restart: unless-stopped
+    env_file:
+      - .env
+    expose:
+      - "8080"
+    volumes:
+      - bitstore_data_protection:/root/.aspnet/DataProtection-Keys
+    networks:
+      - shared_backend
+
+volumes:
+  bitstore_data_protection:
+    name: bitstore_data_protection
+
+networks:
+  shared_backend:
+    external: true
+    name: shared_backend

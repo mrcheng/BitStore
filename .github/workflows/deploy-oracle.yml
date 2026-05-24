@@ -1,0 +1,49 @@
+name: Deploy BitStore to Oracle
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - "BitStoreWeb/BitStoreWeb.Net9/**"
+      - ".github/workflows/deploy-oracle.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: bitstore-oracle-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: BitStoreWeb/BitStoreWeb.Net9
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Prepare SSH key
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.ORACLE_SSH_PRIVATE_KEY }}" > ~/.ssh/oracle.key
+          chmod 600 ~/.ssh/oracle.key
+          ssh-keyscan -H "${{ vars.ORACLE_HOST || '82.70.47.203' }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy
+        shell: pwsh
+        run: |
+          ./deploy/oracle/deploy-oracle.ps1 `
+            -HostName "${{ vars.ORACLE_HOST || '82.70.47.203' }}" `
+            -UserName "${{ vars.ORACLE_SSH_USER || 'ubuntu' }}" `
+            -KeyPath "$HOME/.ssh/oracle.key" `
+            -RemoteAppDir "${{ vars.ORACLE_REMOTE_APP_DIR || '/opt/stacks/bitstore' }}" `
+            -PublicUrl "${{ vars.BITSTORE_PUBLIC_URL || 'https://bitstore.mrcheng.se/' }}"

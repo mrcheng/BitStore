@@ -112,6 +112,43 @@
 </section>
 
 <section class="mt-3">
+    <div class="card fade-in-up fade-delay-3">
+        <div class="card-body">
+            <h2 class="section-title h4 mb-2">3. Filter Records (GET)</h2>
+            <p class="text-muted mb-3">Fetches <code>/api/buckets/{slug}/records</code> with optional paging, time, and value-prefix filters.</p>
+            <div class="row g-3">
+                <div class="col-sm-4 col-lg-2">
+                    <label for="takeInput" class="form-label">Take</label>
+                    <input id="takeInput" type="number" class="form-control" value="50" min="1" max="200">
+                </div>
+                <div class="col-sm-4 col-lg-3">
+                    <label for="fromUtcInput" class="form-label">From UTC</label>
+                    <input id="fromUtcInput" type="date" class="form-control">
+                </div>
+                <div class="col-sm-4 col-lg-3">
+                    <label for="toUtcInput" class="form-label">To UTC</label>
+                    <input id="toUtcInput" type="date" class="form-control">
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <label for="valuePrefixInput" class="form-label">Value Prefix</label>
+                    <input id="valuePrefixInput" type="text" class="form-control" placeholder="g4c:">
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <label for="valuePrefixesInput" class="form-label">Prefixes</label>
+                    <input id="valuePrefixesInput" type="text" class="form-control" placeholder="g4c:,g4d:">
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2 mt-3 mb-3">
+                <button class="btn btn-primary" id="listRecordsButton" type="button">List Records</button>
+                <button class="btn btn-outline-primary" id="nextRecordsButton" type="button" disabled>Next Page</button>
+                <button class="btn btn-outline-primary" id="copyRecordsCurlButton" type="button">Copy Records curl</button>
+            </div>
+            <pre id="recordsOutput" class="demo-output">No filtered read yet.</pre>
+        </div>
+    </div>
+</section>
+
+<section class="mt-3">
     <div class="demo-status fade-in-up fade-delay-3" id="status" data-state="ready">
         <span class="demo-dot"></span>
         <span id="statusText">Ready.</span>
@@ -119,13 +156,13 @@
 </section>
 
 <section class="mt-4">
-    <h2 class="section-title mb-2">3. Minimal HTML Example</h2>
+    <h2 class="section-title mb-2">4. Minimal HTML Example</h2>
     <p class="section-subtitle mb-3">This will loop your array in bucket <code>main</code>. Change <code>main</code> to your slug, like <code>yourslug</code>.</p>
     <pre class="code-sample mb-0"><code class="language-html">&lt;!doctype html&gt;
 &lt;html lang="en"&gt;
   &lt;body&gt;
     &lt;script&gt;
-      fetch("https://your-bitstore-host/api/buckets/main/records", {
+      fetch("https://your-bitstore-host/api/buckets/main/records?take=50&amp;valuePrefix=g4c:", {
         headers: {
           "X-BitStore-Key": "your key"
         }
@@ -146,18 +183,28 @@
         const slugInput = document.getElementById("slugInput");
         const writeKeyInput = document.getElementById("writeKeyInput");
         const valueInput = document.getElementById("valueInput");
+        const takeInput = document.getElementById("takeInput");
+        const fromUtcInput = document.getElementById("fromUtcInput");
+        const toUtcInput = document.getElementById("toUtcInput");
+        const valuePrefixInput = document.getElementById("valuePrefixInput");
+        const valuePrefixesInput = document.getElementById("valuePrefixesInput");
         const getButton = document.getElementById("getButton");
         const postButton = document.getElementById("postButton");
+        const listRecordsButton = document.getElementById("listRecordsButton");
+        const nextRecordsButton = document.getElementById("nextRecordsButton");
         const copyReadCurlButton = document.getElementById("copyReadCurlButton");
         const copyWriteCurlButton = document.getElementById("copyWriteCurlButton");
+        const copyRecordsCurlButton = document.getElementById("copyRecordsCurlButton");
         const getOutput = document.getElementById("getOutput");
         const postOutput = document.getElementById("postOutput");
+        const recordsOutput = document.getElementById("recordsOutput");
         const endpointPreview = document.getElementById("endpointPreview");
         const writeKeyHint = document.getElementById("writeKeyHint");
         const valueWarning = document.getElementById("valueWarning");
         const status = document.getElementById("status");
         const statusText = document.getElementById("statusText");
         const maxValueLength = 8;
+        let nextRecordsCursor = "";
 
         function defaultBaseUrl() {
             return window.location.origin && window.location.origin.startsWith("http")
@@ -187,6 +234,25 @@
             const baseUrl = normalizeBaseUrl(baseUrlInput.value);
             const slug = encodeURIComponent(readSlug());
             return `${baseUrl}/api/buckets/${slug}`;
+        }
+
+        function appendQueryParam(params, key, value) {
+            const normalized = (value || "").trim();
+            if (normalized) {
+                params.set(key, normalized);
+            }
+        }
+
+        function buildRecordsUrl(cursor) {
+            const params = new URLSearchParams();
+            const take = Math.min(Math.max(Number.parseInt(takeInput.value || "50", 10) || 50, 1), 200);
+            params.set("take", take.toString());
+            appendQueryParam(params, "fromUtc", fromUtcInput.value);
+            appendQueryParam(params, "toUtc", toUtcInput.value);
+            appendQueryParam(params, "valuePrefix", valuePrefixInput.value);
+            appendQueryParam(params, "valuePrefixes", valuePrefixesInput.value);
+            appendQueryParam(params, "cursor", cursor);
+            return `${buildBucketUrl()}/records?${params.toString()}`;
         }
 
         function setStatus(text, state) {
@@ -270,6 +336,10 @@
 
         function buildReadCurl() {
             return `curl "${buildBucketUrl()}"`;
+        }
+
+        function buildRecordsCurl() {
+            return `curl "${buildRecordsUrl("")}"`;
         }
 
         function buildWriteCurl() {
@@ -396,6 +466,37 @@ ${JSON.stringify(data, null, 2)}`;
             }
         }
 
+        async function listRecords(cursor) {
+            try {
+                setStatus("Loading records...", "loading");
+                const response = await fetch(buildRecordsUrl(cursor || ""), {
+                    headers: { "Accept": "application/json" },
+                    credentials: "omit"
+                });
+                const text = await response.text();
+                const data = safeParseJson(text);
+                if (!response.ok) {
+                    throw new Error(extractApiErrorMessage(data, `HTTP ${response.status} ${response.statusText}`));
+                }
+
+                nextRecordsCursor = data.nextCursor || "";
+                nextRecordsButton.disabled = !nextRecordsCursor;
+                recordsOutput.textContent =
+`Returned: ${data.count || 0}
+Has more: ${data.hasMore ? "yes" : "no"}
+Next cursor: ${nextRecordsCursor || "(none)"}
+
+Raw response:
+${JSON.stringify(data, null, 2)}`;
+
+                updateQueryParams();
+                setStatus("Records loaded.", "ok");
+            } catch (error) {
+                recordsOutput.textContent = `Filtered read failed: ${error.message}`;
+                setStatus("Filtered read failed.", "error");
+            }
+        }
+
         const params = new URLSearchParams(window.location.search);
         baseUrlInput.value = params.get("base") || defaultBaseUrl();
         if (params.get("slug")) {
@@ -406,8 +507,15 @@ ${JSON.stringify(data, null, 2)}`;
 
         getButton.addEventListener("click", getBucket);
         postButton.addEventListener("click", postValue);
+        listRecordsButton.addEventListener("click", () => {
+            nextRecordsCursor = "";
+            nextRecordsButton.disabled = true;
+            listRecords("");
+        });
+        nextRecordsButton.addEventListener("click", () => listRecords(nextRecordsCursor));
         copyReadCurlButton.addEventListener("click", () => copyTextToClipboard(buildReadCurl(), "GET curl copied."));
         copyWriteCurlButton.addEventListener("click", () => copyTextToClipboard(buildWriteCurl(), "POST curl copied."));
+        copyRecordsCurlButton.addEventListener("click", () => copyTextToClipboard(buildRecordsCurl(), "Records curl copied."));
 
         baseUrlInput.addEventListener("input", setEndpointPreview);
         slugInput.addEventListener("input", setEndpointPreview);

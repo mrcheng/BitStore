@@ -10,7 +10,7 @@ using Microsoft.OpenApi;
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Server=localhost;Port=3306;Database=bitstore;User=bitstore;Password=change-me;";
-var mySqlServerVersion = GetConfiguredMySqlServerVersion(builder.Configuration);
+var serverVersion = GetConfiguredServerVersion(builder.Configuration);
 
 // Add services to the container.
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -34,7 +34,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseMySql(
         connectionString,
-        new MySqlServerVersion(mySqlServerVersion),
+        serverVersion,
         mySqlOptions =>
         {
             mySqlOptions.EnableRetryOnFailure(
@@ -98,6 +98,8 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
+    EnsureRecordFilterIndex(db, "IX_BucketRecords_BucketId_UpdatedUtc", "`BucketId`, `UpdatedUtc`");
+    EnsureRecordFilterIndex(db, "IX_BucketRecords_BucketId_Value", "`BucketId`, `Value`");
 }
 
 // Configure the HTTP request pipeline.
@@ -150,10 +152,57 @@ app.MapControllerRoute(
 
 app.Run();
 
-static Version GetConfiguredMySqlServerVersion(IConfiguration configuration)
+static ServerVersion GetConfiguredServerVersion(IConfiguration configuration)
 {
     var configuredVersion = configuration["MySql:ServerVersion"];
-    return Version.TryParse(configuredVersion, out var version)
-        ? version
+    var version = Version.TryParse(configuredVersion, out var parsedVersion)
+        ? parsedVersion
         : new Version(8, 0, 0);
+    var serverType = configuration["MySql:ServerType"];
+    return string.Equals(serverType, "MariaDb", StringComparison.OrdinalIgnoreCase)
+        ? new MariaDbServerVersion(version)
+        : new MySqlServerVersion(version);
+}
+
+static void EnsureRecordFilterIndex(AppDbContext db, string indexName, string columns)
+{
+    var connection = db.Database.GetDbConnection();
+    var shouldClose = connection.State == System.Data.ConnectionState.Closed;
+    if (shouldClose)
+    {
+        connection.Open();
+    }
+
+    try
+    {
+        using var existsCommand = connection.CreateCommand();
+        existsCommand.CommandText = """
+            SELECT COUNT(1)
+            FROM INFORMATION_SCHEMA.STATISTICS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'BucketRecords'
+              AND INDEX_NAME = @indexName;
+            """;
+        var indexNameParameter = existsCommand.CreateParameter();
+        indexNameParameter.ParameterName = "@indexName";
+        indexNameParameter.Value = indexName;
+        existsCommand.Parameters.Add(indexNameParameter);
+
+        var exists = Convert.ToInt32(existsCommand.ExecuteScalar()) > 0;
+        if (exists)
+        {
+            return;
+        }
+
+        using var createCommand = connection.CreateCommand();
+        createCommand.CommandText = $"CREATE INDEX `{indexName}` ON `BucketRecords` ({columns});";
+        createCommand.ExecuteNonQuery();
+    }
+    finally
+    {
+        if (shouldClose)
+        {
+            connection.Close();
+        }
+    }
 }

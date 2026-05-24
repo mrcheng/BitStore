@@ -52,7 +52,19 @@
 <span class="tok-command">curl</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/latest"</span>
 
 <span class="tok-comment"># List recent records (optional take=1..200)</span>
-<span class="tok-command">curl</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/records?take=50"</span></code></pre>
+<span class="tok-command">curl</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/records?take=50"</span>
+
+<span class="tok-comment"># Page through older records with the nextCursor from the previous response</span>
+<span class="tok-command">curl</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/records?take=50&amp;cursor=NEXT_CURSOR"</span>
+
+<span class="tok-comment"># Created date range. fromUtc is inclusive; toUtc is exclusive.</span>
+<span class="tok-command">curl</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/records?fromUtc=2026-05-11&amp;toUtc=2026-05-18"</span>
+
+<span class="tok-comment"># Value filters for app-encoded keys like g4c:1200</span>
+<span class="tok-command">curl</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/records?valuePrefix=g4c:"</span>
+<span class="tok-command">curl</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/records?valuePrefixes=g4c:,g4d:,g4e:,g4f:,g4g:,g4h:,g4i:"</span>
+<span class="tok-command">curl</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/records?valuePrefixFrom=g4c:&amp;valuePrefixTo=g4i:"</span></code></pre>
+        <p class="small text-muted mt-2 mb-0">Record list responses include <code>hasMore</code> and <code>nextCursor</code>. Extra filters include <code>beforeUtc</code>, <code>updatedFromUtc</code>, <code>updatedToUtc</code>, <code>value</code>, and <code>valueContains</code>.</p>
     </div>
 </div>
 

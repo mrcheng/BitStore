@@ -1,0 +1,11 @@
+bin/
+bin_verify/
+obj/
+node_modules/
+wwwroot/dist/
+bitstore.db
+bitstore.db-shm
+bitstore.db-wal
+*.log
+.git/
+.vs/

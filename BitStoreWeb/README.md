@@ -52,6 +52,10 @@ Note: Swagger UI (`/api` -> `/swagger`) requires login. The `/demo` page intenti
 ```bash
 curl "https://localhost:7001/api/buckets/your-slug"
 curl "https://localhost:7001/api/buckets/your-slug/latest"
+curl "https://localhost:7001/api/buckets/your-slug/records?take=50"
+curl "https://localhost:7001/api/buckets/your-slug/records?fromUtc=2026-05-11&toUtc=2026-05-18"
+curl "https://localhost:7001/api/buckets/your-slug/records?valuePrefix=g4c:"
+curl "https://localhost:7001/api/buckets/your-slug/records?valuePrefixes=g4c:,g4d:,g4e:"
 ```
 
 ### 4) Write data
@@ -69,7 +73,10 @@ curl -X POST "https://localhost:7001/api/buckets/your-slug/records" \
 |---|---|
 | GET | `/api/buckets/{slug}` |
 | GET | `/api/buckets/{slug}/latest` |
-| GET | `/api/buckets/{slug}/records?take=50` |
+| GET | `/api/buckets/{slug}/records?take=50&cursor=...` |
+| GET | `/api/buckets/{slug}/records?fromUtc=2026-05-11&toUtc=2026-05-18` |
+| GET | `/api/buckets/{slug}/records?valuePrefix=g4c:` |
+| GET | `/api/buckets/{slug}/records?valuePrefixes=g4c:,g4d:,g4e:` |
 | POST | `/api/buckets/{slug}/records` |
 | PUT | `/api/buckets/{slug}/records/{recordId}` |
 | POST | `/api/buckets/{slug}/records/{recordId}/clear` |
@@ -80,6 +87,9 @@ curl -X POST "https://localhost:7001/api/buckets/your-slug/records" \
 ## Product Guardrails
 
 - Max record value length: **8 characters**
+- Record list paging uses `take` (`1..200`) and the opaque `nextCursor` returned by the previous response
+- Record date filters use UTC; `fromUtc` is inclusive and `toUtc` is exclusive
+- For app-encoded values, use `valuePrefix`, `valuePrefixes`, or `valuePrefixFrom`/`valuePrefixTo`
 - Swagger UI requires authenticated session
 - Reads are public if slug is known
 - Writes require valid key or owner session
@@ -142,6 +152,7 @@ dotnet build BitStoreWeb.Net9/BitStoreWeb.Net9.csproj
 ## Deploy
 
 - Linux/MySQL deployment walkthrough: `docs/DEPLOY_LINUX_MYSQL.md`
+- Oracle VM Docker deployment script: `BitStoreWeb.Net9/deploy/oracle/deploy-oracle.ps1`
 - GitHub Actions workflow: `.github/workflows/ci.yml`
 - GitHub Actions workflow: `.github/workflows/deploy-linux-mysql.yml`
 
