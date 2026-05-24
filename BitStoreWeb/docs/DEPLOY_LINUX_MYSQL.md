@@ -1,4 +1,12 @@
-# Deploy BitStore To Linux With MySQL
+# Historical Linux/MySQL Deploy Notes
+
+This guide describes the older non-Docker SSH/SCP deployment path. The active production deployment is now the Oracle VM Docker setup documented in:
+
+```text
+BitStoreWeb.Net9/deploy/oracle/README.md
+```
+
+The old `.github/workflows/deploy-linux-mysql.yml` workflow has been removed so pushes deploy only through the Oracle Docker workflow.
 
 This guide deploys `BitStoreWeb.Net9` to a Linux host over SSH using:
 
@@ -56,15 +64,15 @@ sudo systemctl restart bitstore
 
 The SSH user must be allowed to restart that service without an interactive password prompt.
 
-## Workflow
+## Old Workflow
 
-The deploy workflow is:
+The old deploy workflow was:
 
 ```text
 .github/workflows/deploy-linux-mysql.yml
 ```
 
-It runs on pushes to `master`, and can also be started manually from GitHub Actions.
+It has been removed from the active repository.
 
 It performs:
 
