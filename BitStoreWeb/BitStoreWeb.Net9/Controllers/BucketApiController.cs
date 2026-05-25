@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Text;
@@ -95,6 +96,12 @@ public class BucketApiController : ControllerBase
         string slug,
         [FromQuery] int take = 50,
         [FromQuery] string? cursor = null,
+        [FromQuery] string? date = null,
+        [FromQuery] string? fromDate = null,
+        [FromQuery] string? toDate = null,
+        [FromQuery] string? week = null,
+        [FromQuery] string? month = null,
+        [FromQuery] string? timeZone = null,
         [FromQuery] DateTime? fromUtc = null,
         [FromQuery] DateTime? toUtc = null,
         [FromQuery] DateTime? beforeUtc = null,
@@ -112,6 +119,12 @@ public class BucketApiController : ControllerBase
         {
             Take = take,
             Cursor = cursor,
+            Date = date,
+            FromDate = fromDate,
+            ToDate = toDate,
+            Week = week,
+            Month = month,
+            TimeZone = timeZone,
             FromUtc = fromUtc,
             ToUtc = toUtc,
             BeforeUtc = beforeUtc,
@@ -148,9 +161,24 @@ public class BucketApiController : ControllerBase
             return BadRequest(new { message = cursorError });
         }
 
+        if (!TryBuildCalendarCreatedUtcRange(query, out var calendarFromUtc, out var calendarToUtc, out var calendarError))
+        {
+            return BadRequest(new { message = calendarError });
+        }
+
         var recordsQuery = _db.BucketRecords
             .AsNoTracking()
             .Where(x => x.BucketId == bucket.Id);
+
+        if (calendarFromUtc.HasValue)
+        {
+            recordsQuery = recordsQuery.Where(x => x.CreatedUtc >= calendarFromUtc.Value);
+        }
+
+        if (calendarToUtc.HasValue)
+        {
+            recordsQuery = recordsQuery.Where(x => x.CreatedUtc < calendarToUtc.Value);
+        }
 
         if (query.FromUtc.HasValue)
         {
@@ -561,6 +589,299 @@ public class BucketApiController : ControllerBase
             _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
         };
 
+    private static bool TryBuildCalendarCreatedUtcRange(
+        ListBucketRecordsQuery query,
+        out DateTime? fromUtc,
+        out DateTime? toUtc,
+        out string errorMessage)
+    {
+        fromUtc = null;
+        toUtc = null;
+        errorMessage = string.Empty;
+
+        var hasDate = !string.IsNullOrWhiteSpace(query.Date);
+        var hasDateRange = !string.IsNullOrWhiteSpace(query.FromDate) || !string.IsNullOrWhiteSpace(query.ToDate);
+        var hasWeek = !string.IsNullOrWhiteSpace(query.Week);
+        var hasMonth = !string.IsNullOrWhiteSpace(query.Month);
+        var calendarFilterCount = Convert.ToInt32(hasDate)
+            + Convert.ToInt32(hasDateRange)
+            + Convert.ToInt32(hasWeek)
+            + Convert.ToInt32(hasMonth);
+
+        if (calendarFilterCount == 0)
+        {
+            return true;
+        }
+
+        if (calendarFilterCount > 1)
+        {
+            errorMessage = "Use only one calendar filter: date, fromDate/toDate, week, or month.";
+            return false;
+        }
+
+        if (!TryFindTimeZone(query.TimeZone, out var timeZone, out errorMessage))
+        {
+            return false;
+        }
+
+        if (hasDate)
+        {
+            if (!TryParseDate(query.Date, "date", out var date, out errorMessage))
+            {
+                return false;
+            }
+
+            if (!TryAddDays(date, 1, "date", out var nextDate, out errorMessage))
+            {
+                return false;
+            }
+
+            return TryConvertLocalRangeToUtc(date, nextDate, timeZone, out fromUtc, out toUtc, out errorMessage);
+        }
+
+        if (hasDateRange)
+        {
+            DateOnly? fromDate = null;
+            DateOnly? toDate = null;
+
+            if (!string.IsNullOrWhiteSpace(query.FromDate))
+            {
+                if (!TryParseDate(query.FromDate, "fromDate", out var parsedFromDate, out errorMessage))
+                {
+                    return false;
+                }
+
+                fromDate = parsedFromDate;
+            }
+
+            if (!string.IsNullOrWhiteSpace(query.ToDate))
+            {
+                if (!TryParseDate(query.ToDate, "toDate", out var parsedToDate, out errorMessage))
+                {
+                    return false;
+                }
+
+                toDate = parsedToDate;
+            }
+
+            if (fromDate.HasValue && toDate.HasValue && fromDate.Value > toDate.Value)
+            {
+                errorMessage = "fromDate must be before or equal to toDate.";
+                return false;
+            }
+
+            if (fromDate.HasValue &&
+                !TryConvertLocalDateBoundaryToUtc(fromDate.Value, timeZone, out fromUtc, out errorMessage))
+            {
+                return false;
+            }
+
+            if (toDate.HasValue &&
+                (!TryAddDays(toDate.Value, 1, "toDate", out var nextToDate, out errorMessage) ||
+                 !TryConvertLocalDateBoundaryToUtc(nextToDate, timeZone, out toUtc, out errorMessage)))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        if (hasWeek)
+        {
+            if (!TryParseIsoWeek(query.Week, out var weekStart, out errorMessage))
+            {
+                return false;
+            }
+
+            if (!TryAddDays(weekStart, 7, "week", out var weekEnd, out errorMessage))
+            {
+                return false;
+            }
+
+            return TryConvertLocalRangeToUtc(weekStart, weekEnd, timeZone, out fromUtc, out toUtc, out errorMessage);
+        }
+
+        if (!TryParseMonth(query.Month, out var monthStart, out errorMessage))
+        {
+            return false;
+        }
+
+        if (!TryAddMonths(monthStart, 1, "month", out var nextMonth, out errorMessage))
+        {
+            return false;
+        }
+
+        return TryConvertLocalRangeToUtc(monthStart, nextMonth, timeZone, out fromUtc, out toUtc, out errorMessage);
+    }
+
+    private static bool TryFindTimeZone(string? value, out TimeZoneInfo timeZone, out string errorMessage)
+    {
+        errorMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            timeZone = TimeZoneInfo.Utc;
+            return true;
+        }
+
+        try
+        {
+            timeZone = TimeZoneInfo.FindSystemTimeZoneById(value.Trim());
+            return true;
+        }
+        catch (TimeZoneNotFoundException)
+        {
+        }
+        catch (InvalidTimeZoneException)
+        {
+        }
+
+        timeZone = TimeZoneInfo.Utc;
+        errorMessage = $"Unknown timeZone '{value}'. Use a system time zone ID such as 'UTC' or 'Europe/Stockholm'.";
+        return false;
+    }
+
+    private static bool TryParseDate(string? value, string parameterName, out DateOnly date, out string errorMessage)
+    {
+        if (DateOnly.TryParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+        {
+            errorMessage = string.Empty;
+            return true;
+        }
+
+        errorMessage = $"{parameterName} must use yyyy-MM-dd.";
+        return false;
+    }
+
+    private static bool TryParseIsoWeek(string? value, out DateOnly weekStart, out string errorMessage)
+    {
+        weekStart = default;
+        var parts = value?.Trim().Split('-', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts is null ||
+            parts.Length != 2 ||
+            !int.TryParse(parts[0], NumberStyles.None, CultureInfo.InvariantCulture, out var year) ||
+            year is < 1 or > 9999)
+        {
+            errorMessage = "week must use yyyy-Www, for example 2026-W21.";
+            return false;
+        }
+
+        var weekPart = parts[1].StartsWith('W') || parts[1].StartsWith('w')
+            ? parts[1][1..]
+            : parts[1];
+        if (!int.TryParse(weekPart, NumberStyles.None, CultureInfo.InvariantCulture, out var week) ||
+            week < 1 ||
+            week > ISOWeek.GetWeeksInYear(year))
+        {
+            errorMessage = "week must use a valid ISO week, for example 2026-W21.";
+            return false;
+        }
+
+        weekStart = DateOnly.FromDateTime(ISOWeek.ToDateTime(year, week, DayOfWeek.Monday));
+        errorMessage = string.Empty;
+        return true;
+    }
+
+    private static bool TryParseMonth(string? value, out DateOnly monthStart, out string errorMessage)
+    {
+        monthStart = default;
+        var parts = value?.Trim().Split('-', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts is not [var yearPart, var monthPart] ||
+            !int.TryParse(yearPart, NumberStyles.None, CultureInfo.InvariantCulture, out var year) ||
+            year is < 1 or > 9999 ||
+            !int.TryParse(monthPart, NumberStyles.None, CultureInfo.InvariantCulture, out var month) ||
+            month is < 1 or > 12)
+        {
+            errorMessage = "month must use yyyy-MM.";
+            return false;
+        }
+
+        monthStart = new DateOnly(year, month, 1);
+        errorMessage = string.Empty;
+        return true;
+    }
+
+    private static bool TryAddDays(
+        DateOnly date,
+        int days,
+        string parameterName,
+        out DateOnly result,
+        out string errorMessage)
+    {
+        try
+        {
+            result = date.AddDays(days);
+            errorMessage = string.Empty;
+            return true;
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            result = default;
+            errorMessage = $"{parameterName} is outside the supported date range.";
+            return false;
+        }
+    }
+
+    private static bool TryAddMonths(
+        DateOnly date,
+        int months,
+        string parameterName,
+        out DateOnly result,
+        out string errorMessage)
+    {
+        try
+        {
+            result = date.AddMonths(months);
+            errorMessage = string.Empty;
+            return true;
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            result = default;
+            errorMessage = $"{parameterName} is outside the supported date range.";
+            return false;
+        }
+    }
+
+    private static bool TryConvertLocalRangeToUtc(
+        DateOnly startDate,
+        DateOnly endDate,
+        TimeZoneInfo timeZone,
+        out DateTime? fromUtc,
+        out DateTime? toUtc,
+        out string errorMessage)
+    {
+        if (!TryConvertLocalDateBoundaryToUtc(startDate, timeZone, out fromUtc, out errorMessage))
+        {
+            toUtc = null;
+            return false;
+        }
+
+        return TryConvertLocalDateBoundaryToUtc(endDate, timeZone, out toUtc, out errorMessage);
+    }
+
+    private static bool TryConvertLocalDateBoundaryToUtc(
+        DateOnly date,
+        TimeZoneInfo timeZone,
+        out DateTime? utc,
+        out string errorMessage)
+    {
+        var localBoundary = DateTime.SpecifyKind(date.ToDateTime(TimeOnly.MinValue), DateTimeKind.Unspecified);
+
+        try
+        {
+            utc = TimeZoneInfo.ConvertTimeToUtc(localBoundary, timeZone);
+            errorMessage = string.Empty;
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            utc = null;
+            errorMessage = $"The date boundary {date:yyyy-MM-dd} is invalid in timeZone '{timeZone.Id}'.";
+            return false;
+        }
+    }
+
     private static List<string> NormalizeValuePrefixes(string? valuePrefix, string[]? valuePrefixes)
     {
         var prefixes = new List<string>();
@@ -690,6 +1011,18 @@ public class BucketApiController : ControllerBase
         public int Take { get; set; } = 50;
 
         public string? Cursor { get; set; }
+
+        public string? Date { get; set; }
+
+        public string? FromDate { get; set; }
+
+        public string? ToDate { get; set; }
+
+        public string? Week { get; set; }
+
+        public string? Month { get; set; }
+
+        public string? TimeZone { get; set; }
 
         public DateTime? FromUtc { get; set; }
 
