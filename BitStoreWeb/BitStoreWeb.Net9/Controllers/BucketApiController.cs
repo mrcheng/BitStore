@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 using BitStoreWeb.Net9.Data;
 using BitStoreWeb.Net9.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +15,8 @@ namespace BitStoreWeb.Net9.Controllers;
 [Route("api/buckets")]
 public class BucketApiController : ControllerBase
 {
+    private const int MaxValuePatternLength = 128;
+
     private readonly AppDbContext _db;
 
     public BucketApiController(AppDbContext db)
@@ -113,6 +116,7 @@ public class BucketApiController : ControllerBase
         [FromQuery] string? valuePrefixFrom = null,
         [FromQuery] string? valuePrefixTo = null,
         [FromQuery] string? valueContains = null,
+        [FromQuery] string? valuePattern = null,
         CancellationToken cancellationToken = default)
     {
         var query = new ListBucketRecordsQuery
@@ -135,7 +139,8 @@ public class BucketApiController : ControllerBase
             ValuePrefixes = valuePrefixes,
             ValuePrefixFrom = valuePrefixFrom,
             ValuePrefixTo = valuePrefixTo,
-            ValueContains = valueContains
+            ValueContains = valueContains,
+            ValuePattern = valuePattern
         };
 
         var normalizedSlug = NormalizeLookup(slug);
@@ -238,6 +243,16 @@ public class BucketApiController : ControllerBase
         {
             var normalizedValueContains = query.ValueContains.Trim();
             recordsQuery = recordsQuery.Where(x => x.Value != null && x.Value.Contains(normalizedValueContains));
+        }
+
+        if (!TryNormalizeValuePattern(query.ValuePattern, out var normalizedValuePattern, out var valuePatternError))
+        {
+            return BadRequest(new { message = valuePatternError });
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedValuePattern))
+        {
+            recordsQuery = recordsQuery.Where(x => x.Value != null && Regex.IsMatch(x.Value, normalizedValuePattern));
         }
 
         if (recordCursor is not null)
@@ -916,6 +931,34 @@ public class BucketApiController : ControllerBase
         }
     }
 
+    private static bool TryNormalizeValuePattern(string? value, out string? pattern, out string errorMessage)
+    {
+        pattern = null;
+        errorMessage = string.Empty;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return true;
+        }
+
+        pattern = value.Trim();
+        if (pattern.Length > MaxValuePatternLength)
+        {
+            errorMessage = $"valuePattern must be {MaxValuePatternLength} characters or fewer.";
+            return false;
+        }
+
+        try
+        {
+            _ = new Regex(pattern, RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            errorMessage = "valuePattern must be a valid regular expression.";
+            return false;
+        }
+    }
+
     private static Expression<Func<BucketRecord, bool>> BuildValuePrefixesPredicate(IReadOnlyList<string> prefixes)
     {
         var record = Expression.Parameter(typeof(BucketRecord), "record");
@@ -1045,6 +1088,8 @@ public class BucketApiController : ControllerBase
         public string? ValuePrefixTo { get; set; }
 
         public string? ValueContains { get; set; }
+
+        public string? ValuePattern { get; set; }
     }
 
     public sealed class UpsertBucketRecordRequest

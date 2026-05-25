@@ -69,8 +69,9 @@
 <span class="tok-comment"># Value filters for app-encoded keys like g4c:1200</span>
 <span class="tok-command">curl</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/records?valuePrefix=g4c:"</span>
 <span class="tok-command">curl</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/records?valuePrefixes=g4c:,g4d:,g4e:,g4f:,g4g:,g4h:,g4i:"</span>
-<span class="tok-command">curl</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/records?valuePrefixFrom=g4c:&amp;valuePrefixTo=g4i:"</span></code></pre>
-        <p class="small text-muted mt-2 mb-0">Record list responses include <code>hasMore</code> and <code>nextCursor</code>. Extra filters include <code>beforeUtc</code>, <code>updatedFromUtc</code>, <code>updatedToUtc</code>, <code>date</code>, <code>fromDate</code>, <code>toDate</code>, <code>week</code>, <code>month</code>, <code>timeZone</code>, <code>value</code>, and <code>valueContains</code>. Calendar <code>toDate</code> includes that whole local day.</p>
+<span class="tok-command">curl</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/records?valuePrefixFrom=g4c:&amp;valuePrefixTo=g4i:"</span>
+<span class="tok-command">curl</span> <span class="tok-string">"@baseUrl/api/buckets/your-slug/records?valuePattern=^(g|b)\d+$"</span></code></pre>
+        <p class="small text-muted mt-2 mb-0">Record list responses include <code>hasMore</code> and <code>nextCursor</code>. Extra filters include <code>beforeUtc</code>, <code>updatedFromUtc</code>, <code>updatedToUtc</code>, <code>date</code>, <code>fromDate</code>, <code>toDate</code>, <code>week</code>, <code>month</code>, <code>timeZone</code>, <code>value</code>, <code>valueContains</code>, and <code>valuePattern</code>. Calendar <code>toDate</code> includes that whole local day.</p>
     </div>
 </div>
 
